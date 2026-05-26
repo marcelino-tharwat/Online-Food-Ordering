@@ -1,4 +1,4 @@
-﻿export interface Category {
+export interface Category {
   _id: string;
   name: {
     en: string;
@@ -48,19 +48,16 @@ export interface OrderItem {
 
 export interface Order {
   _id: string;
-  user: {
-    _id: string;
-    name: string;
-    email: string;
-  };
+  user: { _id: string; name: string; email: string } | string;
   items: OrderItem[];
   total: number;
   paymentMethod: string;
-  status: 'pending' | 'confirmed' | 'preparing' | 'delivery' | 'delivered';
+  status: "pending" | "confirmed" | "delivered" | "cancelled";
   createdAt: string;
+  fullName: string;
 }
 
-export type OrderStatus = Order['status'];
+export type OrderStatus = Order["status"];
 
 export interface ApiResponse<T> {
   success: boolean;

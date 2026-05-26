@@ -1,28 +1,47 @@
-import { useState, useEffect } from 'react';
-import api from '../../api/axios';
-import type { Order, OrderStatus } from '../../types';
+import { useState, useEffect } from "react";
+import api from "../../api/axios";
+import type { Order, OrderStatus } from "../../types";
+import { Loader2 } from "lucide-react";
 
-const statusConfig: Record<OrderStatus, { label: string; color: string }> = {
-  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-  confirmed: { label: 'Confirmed', color: 'bg-blue-100 text-blue-800' },
-  preparing: { label: 'Preparing', color: 'bg-purple-100 text-purple-800' },
-  delivery: { label: 'Out for Delivery', color: 'bg-indigo-100 text-indigo-800' },
-  delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800' },
+const statusConfig: Record<
+  OrderStatus,
+  { label: string; arLabel: string; color: string }
+> = {
+  pending: {
+    label: "Pending",
+    arLabel: "قيد الانتظار",
+    color: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+  },
+  confirmed: {
+    label: "Confirmed",
+    arLabel: "تم التأكيد",
+    color: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  },
+  delivered: {
+    label: "Delivered",
+    arLabel: "تم التوصيل",
+    color: "bg-green-500/10 text-green-400 border border-green-500/20",
+  },
+  cancelled: {
+    label: "Cancelled",
+    arLabel: "ملغي",
+    color: "bg-red-500/10 text-red-400 border border-red-500/20",
+  },
 };
 
 const statusOptions: OrderStatus[] = [
-  'pending',
-  'confirmed',
-  'preparing',
-  'delivery',
-  'delivered',
+  "pending",
+  "confirmed",
+  "delivered",
+  "cancelled",
 ];
 
 function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  const currentLang = localStorage.getItem("lang") || "en";
 
   useEffect(() => {
     fetchOrders();
@@ -32,156 +51,233 @@ function AdminOrders() {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get('/orders/admin');
+      const response = await api.get("/orders/admin");
       setOrders(response.data.orders || response.data.data || []);
     } catch {
-      setError('Failed to load orders');
+      setError(
+        currentLang === "ar" ? "فشل في تحميل الطلبات" : "Failed to load orders",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+  const handleStatusChange = async (
+    orderId: string,
+    newStatus: OrderStatus,
+  ) => {
     try {
       await api.patch(`/orders/admin/${orderId}/status`, { status: newStatus });
       setOrders((prev) =>
         prev.map((order) =>
-          order._id === orderId ? { ...order, status: newStatus } : order
-        )
+          order._id === orderId ? { ...order, status: newStatus } : order,
+        ),
       );
     } catch {
-      alert('Failed to update order status');
+      alert(
+        currentLang === "ar"
+          ? "فشل تحديث حالة الطلب"
+          : "Failed to update order status",
+      );
     }
   };
 
   const filteredOrders =
-    statusFilter === 'all'
+    statusFilter === "all"
       ? orders
       : orders.filter((order) => order.status === statusFilter);
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+      return new Date(dateString).toLocaleDateString(
+        currentLang === "ar" ? "ar-EG" : "en-US",
+        {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        },
+      );
     } catch {
-      return 'Invalid date';
+      return currentLang === "ar" ? "تاريخ غير صالح" : "Invalid date";
     }
   };
 
-  return (
-    <div className="p-4 lg:p-6">
-      <h1 className="text-2xl font-bold mb-6">Orders</h1>
+  // Safely get user display name - handles both object (populated) and string (unpopulated)
+  const getUserDisplayName = (user: Order["user"]) => {
+    if (!user) {
+      return currentLang === "ar" ? "مستخدم غير معروف" : "Unknown User";
+    }
+    if (typeof user === "object" && "name" in user) {
+      return user.name;
+    }
+    return currentLang === "ar" ? "مستخدم غير معروف" : "Unknown User";
+  };
 
-      {/* Status filter */}
-      <div className="mb-6 flex flex-wrap gap-2">
+  // Safely get user email
+  // const getUserEmail = (user: Order["user"]) => {
+  //   if (!user) {
+  //     return "N/A";
+  //   }
+  //   if (typeof user === "object" && "email" in user) {
+  //     return user.email;
+  //   }
+  //   return "N/A";
+  // };
+
+  return (
+    <div className="space-y-8 font-sans text-white">
+      {/* Title */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-black font-serif tracking-wide">
+          {currentLang === "ar" ? "إدارة الطلبات" : "Orders Management"}
+        </h1>
+        <p className="text-xs text-gray-400 mt-1">
+          {currentLang === "ar"
+            ? "متابعة وتحديث حالات طلبات العملاء الحالية"
+            : "Monitor and update real-time customer order statuses"}
+        </p>
+      </div>
+
+      {/* Status filter tabs */}
+      <div className="flex flex-wrap gap-2 pb-2 border-b border-white/5">
         <button
-          onClick={() => setStatusFilter('all')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            statusFilter === 'all'
-              ? 'bg-gray-900 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100 border'
+          onClick={() => setStatusFilter("all")}
+          className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
+            statusFilter === "all"
+              ? "bg-[#ea580c] text-white border-[#ea580c]"
+              : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white"
           }`}
         >
-          All
+          {currentLang === "ar" ? "الكل" : "All"}
         </button>
         {statusOptions.map((status) => (
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
               statusFilter === status
-                ? 'bg-gray-900 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100 border'
+                ? "bg-[#ea580c] text-white border-[#ea580c]"
+                : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white"
             }`}
           >
-            {statusConfig[status].label}
+            {currentLang === "ar"
+              ? statusConfig[status].arLabel
+              : statusConfig[status].label}
           </button>
         ))}
       </div>
 
+      {/* States Views */}
       {loading && (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+        <div className="flex justify-center items-center py-24">
+          <Loader2 className="w-8 h-8 text-[#ea580c] animate-spin" />
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg">{error}</div>
+        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm font-medium">
+          {error}
+        </div>
       )}
 
       {!loading && !error && filteredOrders.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          No orders found.
+        <div className="text-center py-16 border border-white/10 rounded-2xl bg-white/5 text-gray-400 text-sm">
+          {currentLang === "ar"
+            ? "لا توجد طلبات في هذا القسم حالياً"
+            : "No orders found."}
         </div>
       )}
 
       {!loading && !error && filteredOrders.length > 0 && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="border border-white/10 rounded-2xl bg-[#0b3b24] overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-white/5 text-sm">
+              <thead className="bg-white/5 text-gray-400 font-bold uppercase tracking-wider text-xs">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order ID
+                  <th
+                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
+                  >
+                    {currentLang === "ar" ? "رقم الطلب" : "Order ID"}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
+                  <th
+                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
+                  >
+                    {currentLang === "ar" ? "العميل" : "User"}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
+                  <th
+                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
+                  >
+                    {currentLang === "ar" ? "الإجمالي" : "Total"}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment
+                  <th
+                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
+                  >
+                    {currentLang === "ar" ? "طريقة الدفع" : "Payment"}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th
+                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
+                  >
+                    {currentLang === "ar" ? "الحالة" : "Status"}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                  <th
+                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
+                  >
+                    {currentLang === "ar" ? "التاريخ" : "Date"}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-white/5">
                 {filteredOrders.map((order) => (
-                  <tr key={order._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <tr
+                    key={order._id}
+                    className="hover:bg-white/5 transition-colors group"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-white text-xs">
                       #{order._id.slice(-6).toUpperCase()}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      <div className="font-medium">
-                        {order.user?.name || 'Unknown'}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {/* <div className="font-bold text-white">
+                        {getUserDisplayName(order.fullName)}
+                      </div> */}
+                      <div className="text-gray-400 text-xs mt-0.5">
+                        {order.fullName}
                       </div>
-                      <div className="text-gray-500 text-xs">
-                        {order.user?.email || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-gray-200">
+                      ${order.total?.toFixed(2) || "0.00"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-400 font-medium">
+                      {order.paymentMethod || "N/A"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="relative inline-block">
+                        <select
+                          value={order.status}
+                          onChange={(e) =>
+                            handleStatusChange(
+                              order._id,
+                              e.target.value as OrderStatus,
+                            )
+                          }
+                          className={`px-3 py-1.5 text-xs font-bold rounded-full cursor-pointer appearance-none focus:outline-none transition-all ${statusConfig[order.status].color}`}
+                        >
+                          {statusOptions.map((status) => (
+                            <option
+                              key={status}
+                              value={status}
+                              className="bg-[#0b3b24] text-white"
+                            >
+                              {currentLang === "ar"
+                                ? statusConfig[status].arLabel
+                                : statusConfig[status].label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      ${order.total?.toFixed(2) || '0.00'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                      {order.paymentMethod || 'N/A'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <select
-                        value={order.status}
-                        onChange={(e) =>
-                          handleStatusChange(order._id, e.target.value as OrderStatus)
-                        }
-                        className={`px-2 py-1 text-xs font-medium rounded-full border-0 cursor-pointer ${statusConfig[order.status].color}`}
-                      >
-                        {statusOptions.map((status) => (
-                          <option key={status} value={status}>
-                            {statusConfig[status].label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-400 font-medium">
                       {formatDate(order.createdAt)}
                     </td>
                   </tr>

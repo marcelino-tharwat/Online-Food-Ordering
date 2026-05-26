@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { cartService } from '../services/cartService';
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { cartService } from "../services/cartService";
 import {
   setCartItems,
   optimisticUpdateQuantity,
@@ -11,27 +12,28 @@ import {
   clearCart,
   type CartItem,
   type LocalizedText,
-} from '../redux/slices/cartSlice';
-import type { RootState, AppDispatch } from '../redux/store';
-import { Trash2, Plus, Minus, ShoppingBag, Loader2 } from 'lucide-react';
+} from "../redux/slices/cartSlice";
+import type { RootState, AppDispatch } from "../redux/store";
+import { Trash2, Plus, Minus, ShoppingBag, Loader2 } from "lucide-react";
 
 function Cart() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { cartItems, loading, error, total } = useSelector(
+  const { t, i18n } = useTranslation();
+  const currentLang = (i18n.language as "en" | "ar") || "en";
+  const { cartItems, loading, error } = useSelector(
     (state: RootState) => state.cart,
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const currentLang = localStorage.getItem('lang') || 'en';
 
   const getLocalizedText = (obj: LocalizedText | undefined): string => {
-    if (!obj) return '';
-    return currentLang === 'ar' ? obj.ar : obj.en;
+    if (!obj) return "";
+    return currentLang === "ar" ? obj.ar : obj.en;
   };
 
   useEffect(() => {
-    fetchCart();
-  }, [dispatch]);
+    void fetchCart();
+  }, [dispatch, t]);
 
   const fetchCart = async () => {
     try {
@@ -39,8 +41,8 @@ function Cart() {
       dispatch(setError(null));
       const cartData = await cartService.getCart();
       dispatch(setCartItems(cartData));
-    } catch (err) {
-      dispatch(setError('Failed to load cart'));
+    } catch {
+      dispatch(setError(t("cart.loadCartError")));
     } finally {
       dispatch(setLoading(false));
     }
@@ -53,8 +55,8 @@ function Cart() {
       dispatch(setLoading(true));
       dispatch(setError(null));
       await cartService.updateCart(productId, quantity);
-    } catch (err) {
-      dispatch(setError('Failed to update quantity'));
+    } catch {
+      dispatch(setError(t("cart.updateQuantityError")));
     } finally {
       dispatch(setLoading(false));
     }
@@ -66,8 +68,8 @@ function Cart() {
       dispatch(setLoading(true));
       dispatch(setError(null));
       await cartService.removeFromCart(productId);
-    } catch (err) {
-      dispatch(setError('Failed to remove item'));
+    } catch {
+      dispatch(setError(t("cart.removeItemError")));
     } finally {
       dispatch(setLoading(false));
     }
@@ -79,8 +81,8 @@ function Cart() {
       dispatch(setError(null));
       await cartService.clearCart();
       dispatch(clearCart());
-    } catch (err) {
-      dispatch(setError('Failed to clear cart'));
+    } catch {
+      dispatch(setError(t("cart.emptyCartError")));
     } finally {
       dispatch(setLoading(false));
     }
@@ -93,10 +95,10 @@ function Cart() {
 
   if (loading && (cartItems || []).length === 0) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='flex flex-col items-center gap-4'>
-          <Loader2 className='w-10 h-10 text-blue-600 animate-spin' />
-          <p className='text-gray-600'>Loading your cart...</p>
+      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-[#ea580c] animate-spin" />
+          <p className="text-gray-300 font-medium">{t("cart.loadingCart")}</p>
         </div>
       </div>
     );
@@ -104,14 +106,14 @@ function Cart() {
 
   if (error && (cartItems || []).length === 0) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <p className='text-red-600 text-lg mb-4'>{error}</p>
+      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center text-white p-4">
+        <div className="text-center max-w-sm">
+          <p className="text-red-400 text-lg mb-6 font-medium">⚠️ {error}</p>
           <button
             onClick={fetchCart}
-            className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700'
+            className="bg-[#ea580c] text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-[#d94e06] transition-all"
           >
-            Try Again
+            {t("common.tryAgain")}
           </button>
         </div>
       </div>
@@ -120,20 +122,18 @@ function Cart() {
 
   if ((cartItems || []).length === 0) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
-        <div className='text-center'>
-          <ShoppingBag className='w-20 h-20 text-gray-300 mx-auto mb-4' />
-          <h2 className='text-2xl font-semibold text-gray-700 mb-2'>
-            Your Cart is Empty
+      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center text-white p-4">
+        <div className="text-center max-w-sm">
+          <ShoppingBag className="w-16 h-16 text-[#ea580c] mx-auto mb-6 opacity-90" />
+          <h2 className="text-2xl font-black mb-3 font-serif">
+            {t("cart.yourCartEmpty")}
           </h2>
-          <p className='text-gray-500 mb-6'>
-            Looks like you have not added anything to your cart yet.
-          </p>
+          <p className="text-gray-400 text-sm mb-8">{t("cart.emptyMessage")}</p>
           <button
-            onClick={() => navigate('/menu')}
-            className='bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 inline-block'
+            onClick={() => navigate("/menu")}
+            className="bg-[#ea580c] text-white px-8 py-3.5 rounded-full font-bold shadow-sm hover:bg-[#d94e06] transition-all inline-block w-full text-center"
           >
-            Browse Menu
+            {t("cart.browseMenu")}
           </button>
         </div>
       </div>
@@ -141,111 +141,111 @@ function Cart() {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50 py-8'>
-      <div className='max-w-4xl mx-auto px-4'>
-        <h1 className='text-3xl font-bold text-gray-800 mb-8'>Your Cart</h1>
+    <div className="min-h-screen bg-[#0b3b24] py-12 text-white font-sans">
+      <div className="max-w-4xl mx-auto px-4">
+        <h1 className="text-3xl font-black mb-10 font-serif tracking-wide">
+          {t("cart.yourCart")}
+        </h1>
 
         {error && (
-          <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6'>
+          <div className="bg-red-500/10 border border-red-500/20 text-red-300 px-4 py-3 rounded-xl mb-6 text-sm text-center">
             {error}
           </div>
         )}
 
-        <div className='bg-white rounded-xl shadow-md overflow-hidden mb-6'>
-          <div className='divide-y divide-gray-200'>
-            {(cartItems || []).map((item: CartItem) => (
-              <div
-                key={item.product._id}
-                className='p-6 flex items-center gap-6'
-              >
-                <img
-                  src={item.product.image || '/placeholder.png'}
-                  alt={getLocalizedText(item.product.name)}
-                  className='w-24 h-24 object-cover rounded-lg bg-gray-100'
-                />
+        <div className="space-y-6 mb-10">
+          {(cartItems || []).map((item: CartItem) => (
+            <div
+              key={item.product._id}
+              className="pb-6 flex flex-col sm:flex-row items-center gap-6 border-b border-white/10 last:border-0"
+            >
+              <img
+                src={item.product.image || "/placeholder.png"}
+                alt={getLocalizedText(item.product.name)}
+                className="w-20 h-20 object-cover rounded-xl bg-[#0b3b24] border border-white/10"
+              />
 
-                <div className='flex-1'>
-                  <h3 className='text-lg font-semibold text-gray-800'>
-                    {getLocalizedText(item.product.name)}
-                  </h3>
-                  <p className='text-gray-600 mt-1'>
-                    
-                  </p>
-                </div>
+              <div className="flex-1 text-center sm:text-left">
+                <h3 className="text-lg font-bold">
+                  {getLocalizedText(item.product.name)}
+                </h3>
+                <p className="text-gray-400 text-sm mt-1 font-mono">
+                  ${item.product.price.toFixed(2)}
+                </p>
+              </div>
 
-                <div className='flex items-center gap-3'>
-                  <button
-                    onClick={() =>
-                      handleUpdateQuantity(item.product._id, item.quantity - 1)
-                    }
-                    disabled={
-                      actionLoading === item.product._id || item.quantity <= 1
-                    }
-                    className='p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-                  >
-                    <Minus className='w-4 h-4' />
-                  </button>
+              <div className="flex items-center gap-4 bg-[#0b3b24] border border-white/20 px-3 py-1.5 rounded-full">
+                <button
+                  onClick={() =>
+                    handleUpdateQuantity(item.product._id, item.quantity - 1)
+                  }
+                  disabled={
+                    actionLoading === item.product._id || item.quantity <= 1
+                  }
+                  className="p-1 text-gray-400 hover:text-white disabled:opacity-20 transition-all"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
 
-                  <span className='w-12 text-center font-medium'>
-                    {item.quantity}
-                  </span>
-
-                  <button
-                    onClick={() =>
-                      handleUpdateQuantity(item.product._id, item.quantity + 1)
-                    }
-                    disabled={actionLoading === item.product._id}
-                    className='p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-                  >
-                    <Plus className='w-4 h-4' />
-                  </button>
-                </div>
-
-                <div className='text-lg font-semibold text-gray-800 w-24 text-right'>
-                  
-                </div>
+                <span className="w-6 text-center font-bold font-mono text-sm">
+                  {item.quantity}
+                </span>
 
                 <button
-                  onClick={() => handleRemoveItem(item.product._id)}
+                  onClick={() =>
+                    handleUpdateQuantity(item.product._id, item.quantity + 1)
+                  }
                   disabled={actionLoading === item.product._id}
-                  className='p-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+                  className="p-1 text-gray-400 hover:text-white disabled:opacity-20 transition-all"
                 >
-                  <Trash2 className='w-5 h-5' />
+                  <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
-            ))}
-          </div>
+
+              <div className="text-lg font-black font-mono w-24 text-center sm:text-right">
+                ${(item.product.price * item.quantity).toFixed(2)}
+              </div>
+
+              <button
+                onClick={() => handleRemoveItem(item.product._id)}
+                disabled={actionLoading === item.product._id}
+                className="p-2 text-gray-400 hover:text-red-400 transition-colors rounded-full"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
         </div>
 
-        <div className='bg-white rounded-xl shadow-md p-6'>
-          <div className='flex justify-between items-center mb-6'>
-            <h2 className='text-xl font-semibold text-gray-800'>
-              Order Summary
+        <div className="pt-8 border-t border-white/10">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-lg font-bold text-gray-300 font-serif">
+              {t("checkout.orderSummary")}
             </h2>
-            <div className='text-2xl font-bold text-gray-800'>
-              Total: 
+            <div className="text-3xl font-black font-mono text-[#ea580c]">
+              ${computedTotal.toFixed(2)}
             </div>
           </div>
 
-          <div className='flex gap-4'>
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={handleClearCart}
               disabled={loading}
-              className='flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+              className="flex items-center justify-center gap-2 px-6 py-3.5 border border-white/20 text-gray-300 rounded-full font-semibold hover:text-red-400 hover:border-red-400/40 disabled:opacity-50 transition-all text-sm"
             >
               {loading ? (
-                <Loader2 className='w-4 h-4 animate-spin' />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Trash2 className='w-4 h-4' />
+                <Trash2 className="w-4 h-4" />
               )}
-              Clear Cart
+              {t("cart.clearCart")}
             </button>
 
             <button
-              onClick={() => navigate('/checkout')}
-              className='flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors'
+              onClick={() => navigate("/checkout")}
+              className="flex-1 flex items-center justify-center gap-2 bg-[#ea580c] text-white py-3.5 px-6 rounded-full font-bold tracking-wide hover:bg-[#d94e06] transition-all text-base shadow-sm"
             >
-              Proceed to Checkout
+              {t("cart.proceedCheckout")}
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import {
@@ -52,37 +53,36 @@ interface OrdersResponse {
   data: Order[];
 }
 
-// Status badge colors
-const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; label: { en: string; ar: string } }> = {
+const STATUS_COLORS: Record<
+  OrderStatus,
+  { text: string; label: { en: string; ar: string } }
+> = {
   pending: {
-    bg: "bg-yellow-100",
-    text: "text-yellow-800",
+    text: "text-amber-400",
     label: { en: "Pending", ar: "قيد الانتظار" },
   },
   confirmed: {
-    bg: "bg-blue-100",
-    text: "text-blue-800",
+    text: "text-sky-400",
     label: { en: "Confirmed", ar: "تم التأكيد" },
   },
   delivered: {
-    bg: "bg-green-100",
-    text: "text-green-800",
+    text: "text-emerald-400",
     label: { en: "Delivered", ar: "تم التوصيل" },
   },
   cancelled: {
-    bg: "bg-red-100",
-    text: "text-red-800",
+    text: "text-rose-400",
     label: { en: "Cancelled", ar: "ملغي" },
   },
 };
 
 function Orders() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const currentLang = localStorage.getItem("lang") || "en";
+  const currentLang = (i18n.language as "en" | "ar") || "en";
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -92,18 +92,19 @@ function Orders() {
       try {
         const response = await api.get<OrdersResponse>("/orders/my");
         const sortedOrders = (response.data.data || []).sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
         setOrders(sortedOrders);
       } catch {
-        setError(currentLang === "ar" ? "فشل تحميل الطلبات" : "Failed to load orders");
+        setError(t("orders.orderError"));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchOrders();
-  }, [currentLang]);
+  }, [currentLang, t]);
 
   const getLocalizedText = (obj: LocalizedText | undefined): string => {
     if (!obj) return "";
@@ -134,11 +135,11 @@ function Orders() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center text-white font-sans">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-          <p className="text-gray-600">
-            {currentLang === "ar" ? "جاري تحميل الطلبات..." : "Loading orders..."}
+          <Loader2 className="w-10 h-10 text-[#ea580c] animate-spin" />
+          <p className="text-gray-300 font-medium">
+            {t("orders.loadingOrders")}
           </p>
         </div>
       </div>
@@ -148,15 +149,15 @@ function Orders() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-xl shadow-md p-8 max-w-md w-full text-center">
+      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center px-4 text-white font-sans">
+        <div className="max-w-md w-full text-center py-12">
           <div className="flex justify-center mb-6">
-            <Package className="w-20 h-20 text-gray-300" />
+            <Package className="w-16 h-16 text-[#ea580c]" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            {currentLang === "ar" ? "خطأ في تحميل الطلبات" : "Error Loading Orders"}
+          <h2 className="text-2xl font-black mb-3 font-serif">
+            {t("orders.orderError")}
           </h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <p className="text-gray-400 text-sm">{error}</p>
         </div>
       </div>
     );
@@ -165,129 +166,131 @@ function Orders() {
   // Empty state
   if (orders.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-xl shadow-md p-8 max-w-md w-full text-center">
+      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center px-4 text-white font-sans">
+        <div className="max-w-md w-full text-center py-12">
           <div className="flex justify-center mb-6">
-            <ShoppingBag className="w-20 h-20 text-gray-300" />
+            <ShoppingBag className="w-16 h-16 text-[#ea580c] opacity-90" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            {currentLang === "ar" ? "لا توجد طلبات" : "No Orders Yet"}
+          <h2 className="text-2xl font-black mb-3 font-serif">
+            {t("orders.noOrders")}
           </h2>
-          <p className="text-gray-600 mb-6">
-            {currentLang === "ar"
-              ? "لم تقم بأي طلبات حتى الآن"
-              : "You haven't placed any orders yet"}
+          <p className="text-gray-400 text-sm mb-8">
+            {t("orders.emptyMessage")}
           </p>
-          <a
-            href="/menu"
-            className="inline-block w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          <button
+            onClick={() => navigate("/menu")}
+            className="w-full bg-[#ea580c] text-white py-3.5 rounded-full font-bold shadow-sm hover:bg-[#d94e06] transition-all"
           >
-            {currentLang === "ar" ? "تصفح القائمة" : "Browse Menu"}
-          </a>
+            {t("checkout.browseMenu")}
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#0b3b24] py-12 text-white font-sans">
       <div className="max-w-5xl mx-auto px-4">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8">
-          {currentLang === "ar" ? "طلباتي" : "My Orders"}
+        <h1 className="text-3xl font-black mb-10 font-serif tracking-wide">
+          {t("orders.myOrders")}
         </h1>
 
         {/* Orders List */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {orders.map((order) => {
             const statusColor = getStatusColor(order.status);
-            const itemCount = order.items?.reduce((sum: number, item) => sum + (item.quantity || 0), 0) || 0;
+            const itemCount =
+              order.items?.reduce(
+                (sum: number, item) => sum + (item.quantity || 0),
+                0,
+              ) || 0;
 
             return (
               <div
                 key={order._id}
-                className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
+                className="border border-white/10 p-6 rounded-2xl bg-[#0b3b24] transition-all hover:border-white/20"
               >
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  {/* Left side - Order info */}
-                  <div className="flex-1">
-                    {/* Header row */}
-                    <div className="flex flex-wrap items-center gap-3 mb-3">
-                      <span className="font-mono text-lg font-semibold text-gray-800">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                  {/* Info Block */}
+                  <div className="flex-1 space-y-4">
+                    {/* Header: ID & Status */}
+                    <div className="flex items-center gap-4">
+                      <span className="font-mono text-base font-bold tracking-wider text-gray-200">
                         #{order._id?.slice(-8).toUpperCase() || "--------"}
                       </span>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${statusColor.bg} ${statusColor.text}`}
-                      >
-                        {getLocalizedText(statusColor.label)}
+                      <span className="text-white/20">|</span>
+                      <span className={`text-sm font-bold ${statusColor.text}`}>
+                        • {getLocalizedText(statusColor.label)}
                       </span>
                     </div>
 
-                    {/* Customer Info */}
-                    <div className="flex flex-wrap items-center gap-4 mb-3 text-sm">
+                    {/* Customer Core Info */}
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-gray-300">
                       <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-800">{order.fullName || "-"}</span>
+                        <User className="w-3.5 h-3.5 text-[#ea580c]" />
+                        <span className="font-medium">
+                          {order.fullName || "-"}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600">{order.phoneNumber || "-"}</span>
+                        <Phone className="w-3.5 h-3.5 text-[#ea580c]" />
+                        <span className="font-mono">
+                          {order.phoneNumber || "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5 text-[#ea580c]" />
+                        <span>{formatDate(order.createdAt || "")}</span>
                       </div>
                     </div>
 
-                    {/* Details grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                      {/* Total */}
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6 pt-2 border-t border-white/5 text-xs">
                       <div>
-                        <span className="text-gray-500">
-                          {currentLang === "ar" ? "المجموع" : "Total"}
+                        <span className="text-gray-400 block mb-1">
+                          {t("common.total")}
                         </span>
-                        <p className="font-semibold text-gray-800">
+                        <p className="text-base font-black font-mono text-[#ea580c]">
                           {formatPrice(order.total)}
                         </p>
                       </div>
 
-                      {/* Payment method */}
                       <div>
-                        <span className="text-gray-500">
-                          {currentLang === "ar" ? "طريقة الدفع" : "Payment"}
+                        <span className="text-gray-400 block mb-1">
+                          {t("common.payment")}
                         </span>
-                        <p className="font-medium text-gray-800">
-                          {currentLang === "ar" ? "الدفع عند الاستلام" : "Cash on Delivery"}
+                        <p className="font-bold text-gray-200">
+                          {t("checkout.cashOnDelivery")}
                         </p>
                       </div>
 
-                      {/* Items count */}
-                      <div>
-                        <span className="text-gray-500">
-                          {currentLang === "ar" ? "المنتجات" : "Items"}
+                      <div className="col-span-2 sm:col-span-1">
+                        <span className="text-gray-400 block mb-1">
+                          {t("orders.items")}
                         </span>
-                        <p className="font-medium text-gray-800">
-                          {itemCount} {currentLang === "ar" ? "منتج" : "item(s)"}
+                        <p className="font-bold text-gray-200">
+                          {itemCount} {t("orders.product")}
                         </p>
                       </div>
+                    </div>
 
-                      {/* Date */}
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600">{formatDate(order.createdAt || "")}</span>
-                      </div>
-
-                      {/* Address */}
-                      <div className="flex items-start gap-2 sm:col-span-2">
-                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                        <span className="text-gray-600">{order.address || "-"}</span>
-                      </div>
+                    {/* Full Address field */}
+                    <div className="flex items-start gap-2 pt-2 text-xs text-gray-400">
+                      <MapPin className="w-3.5 h-3.5 text-[#ea580c] mt-0.5 flex-shrink-0" />
+                      <span className="leading-relaxed">
+                        {order.address || "-"}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Right side - Track button */}
-                  <div className="flex-shrink-0">
+                  {/* Action Button: Track Order */}
+                  <div className="flex-shrink-0 lg:pt-0 pt-2 border-t border-white/5 lg:border-none">
                     <button
                       onClick={() => handleTrackOrder(order._id)}
-                      className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      className="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white rounded-full text-sm font-bold hover:bg-white/5 hover:border-white/40 transition-all"
                     >
                       <ExternalLink className="w-4 h-4" />
-                      {currentLang === "ar" ? "تتبع الطلب" : "Track Order"}
+                      {t("orders.trackOrder")}
                     </button>
                   </div>
                 </div>

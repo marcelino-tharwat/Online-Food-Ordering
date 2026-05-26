@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from "react";
 import api from "../../api/axios";
 import type { Product, ProductInput, Category } from "../../types";
+import { Loader2, X, Upload, CheckCircle, AlertCircle } from "lucide-react";
 
 interface ProductModalProps {
   product?: Product;
@@ -10,7 +11,13 @@ interface ProductModalProps {
   onSave: (data: ProductInput) => Promise<void>;
 }
 
-function ProductModal({ product, categories, loadingCategories, onClose, onSave }: ProductModalProps) {
+function ProductModal({
+  product,
+  categories,
+  loadingCategories,
+  onClose,
+  onSave,
+}: ProductModalProps) {
   const [formData, setFormData] = useState<ProductInput>({
     name: { en: "", ar: "" },
     price: 0,
@@ -18,9 +25,10 @@ function ProductModal({ product, categories, loadingCategories, onClose, onSave 
     image: "",
     available: true,
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const currentLang = localStorage.getItem("lang") || "en";
 
   // Sync form data when product prop changes (after fetch completes)
   useEffect(() => {
@@ -52,7 +60,9 @@ function ProductModal({ product, categories, loadingCategories, onClose, onSave 
       const imageUrl = response.data?.imageUrl || response.data?.image || "";
       setFormData((prev) => ({ ...prev, image: imageUrl }));
     } catch {
-      alert("Failed to upload image");
+      alert(
+        currentLang === "ar" ? "فشل في رفع الصورة" : "Failed to upload image",
+      );
     } finally {
       setUploading(false);
     }
@@ -61,7 +71,11 @@ function ProductModal({ product, categories, loadingCategories, onClose, onSave 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.category) {
-      alert("Please select a category");
+      alert(
+        currentLang === "ar"
+          ? "برجاء اختيار القسم أولاً"
+          : "Please select a category",
+      );
       return;
     }
     setSaving(true);
@@ -69,24 +83,45 @@ function ProductModal({ product, categories, loadingCategories, onClose, onSave 
       await onSave(formData);
       onClose();
     } catch {
-      alert("Failed to save product");
+      alert(
+        currentLang === "ar" ? "فشل في حفظ المنتج" : "Failed to save product",
+      );
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md p-6">
-        <h2 className="text-xl font-bold mb-4">
-          {product ? "Edit Product" : "Add Product"}
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans text-white animate-fade-in">
+      <div className="bg-[#0b3b24] border border-white/10 rounded-2xl w-full max-w-md p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto style-scrollbar">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className={`absolute top-4 ${currentLang === "ar" ? "left-4" : "right-4"} text-gray-400 hover:text-white transition-colors`}
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Modal Title */}
+        <h2
+          className={`text-xl font-black font-serif tracking-wide mb-6 ${currentLang === "ar" ? "text-right" : "text-left"}`}
+        >
+          {product
+            ? currentLang === "ar"
+              ? "تعديل المنتج"
+              : "Edit Product"
+            : currentLang === "ar"
+              ? "إضافة منتج جديد"
+              : "Add New Product"}
         </h2>
 
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name (English)
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Name English */}
+          <div className="space-y-1.5">
+            <label
+              className={`block text-xs font-bold text-gray-400 uppercase tracking-wider ${currentLang === "ar" ? "text-right" : "text-left"}`}
+            >
+              {currentLang === "ar" ? "الاسم (بالإنجليزية)" : "Name (English)"}
             </label>
             <input
               type="text"
@@ -97,14 +132,17 @@ function ProductModal({ product, categories, loadingCategories, onClose, onSave 
                   name: { ...prev.name, en: e.target.value },
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-[#ea580c] transition-colors font-medium"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name (Arabic)
+          {/* Name Arabic */}
+          <div className="space-y-1.5">
+            <label
+              className={`block text-xs font-bold text-gray-400 uppercase tracking-wider ${currentLang === "ar" ? "text-right" : "text-left"}`}
+            >
+              {currentLang === "ar" ? "الاسم (بالعربية)" : "Name (Arabic)"}
             </label>
             <input
               type="text"
@@ -115,15 +153,18 @@ function ProductModal({ product, categories, loadingCategories, onClose, onSave 
                   name: { ...prev.name, ar: e.target.value },
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-[#ea580c] transition-colors font-medium text-right"
               required
               dir="rtl"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price
+          {/* Price */}
+          <div className="space-y-1.5">
+            <label
+              className={`block text-xs font-bold text-gray-400 uppercase tracking-wider ${currentLang === "ar" ? "text-right" : "text-left"}`}
+            >
+              {currentLang === "ar" ? "السعر" : "Price"}
             </label>
             <input
               type="number"
@@ -136,23 +177,35 @@ function ProductModal({ product, categories, loadingCategories, onClose, onSave 
                   price: parseFloat(e.target.value) || 0,
                 }))
               }
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-[#ea580c] transition-colors font-mono font-bold"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
+          {/* Category */}
+          <div className="space-y-1.5">
+            <label
+              className={`block text-xs font-bold text-gray-400 uppercase tracking-wider ${currentLang === "ar" ? "text-right" : "text-left"}`}
+            >
+              {currentLang === "ar" ? "القسم" : "Category"}
             </label>
             {loadingCategories ? (
-              <div className="w-full p-2 border rounded-lg bg-gray-50 flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600 mr-2" />
-                <span className="text-gray-500 text-sm">Loading categories...</span>
+              <div className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl flex items-center text-gray-400 text-sm">
+                <Loader2 className="w-4 h-4 text-[#ea580c] animate-spin mr-2 ml-2" />
+                <span>
+                  {currentLang === "ar"
+                    ? "جاري تحميل الأقسام..."
+                    : "Loading categories..."}
+                </span>
               </div>
             ) : categories.length === 0 ? (
-              <div className="w-full p-2 border rounded-lg bg-gray-50 text-gray-500 text-sm">
-                No categories available
+              <div className="w-full px-4 py-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl flex items-center text-xs font-medium">
+                <AlertCircle className="w-4 h-4 mr-1.5 ml-1.5 shrink-0" />
+                <span>
+                  {currentLang === "ar"
+                    ? "لا توجد أقسام متاحة حالياً"
+                    : "No categories available"}
+                </span>
               </div>
             ) : (
               <select
@@ -160,88 +213,143 @@ function ProductModal({ product, categories, loadingCategories, onClose, onSave 
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, category: e.target.value }))
                 }
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-[#ea580c] transition-colors font-medium text-gray-200 cursor-pointer appearance-none"
                 required
               >
-                <option value="">Select a category</option>
+                <option value="" className="bg-[#0b3b24] text-gray-400">
+                  {currentLang === "ar"
+                    ? "اختر قسم المنتج"
+                    : "Select a category"}
+                </option>
                 {categories.map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.name?.en || cat.name?.ar || "Unnamed Category"}
+                  <option
+                    key={cat._id}
+                    value={cat._id}
+                    className="bg-[#0b3b24] text-white"
+                  >
+                    {currentLang === "ar"
+                      ? cat.name?.ar || cat.name?.en
+                      : cat.name?.en || cat.name?.ar || "Unnamed Category"}
                   </option>
                 ))}
               </select>
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Image
+          {/* Image Upload Box */}
+          <div className="space-y-1.5">
+            <label
+              className={`block text-xs font-bold text-gray-400 uppercase tracking-wider ${currentLang === "ar" ? "text-right" : "text-left"}`}
+            >
+              {currentLang === "ar" ? "صورة المنتج" : "Product Image"}
             </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setImageFile(file);
-                  handleImageUpload(file);
-                }
-              }}
-              className="w-full p-2 border rounded-lg"
-            />
-            {uploading && (
-              <div className="mt-2 text-sm text-gray-500 flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600 mr-2" />
-                Uploading...
-              </div>
-            )}
-            {formData.image && (
-              <div className="mt-2">
-                <img
-                  src={formData.image}
-                  alt="Product preview"
-                  className="w-24 h-24 object-cover rounded-lg border"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </div>
-            )}
+
+            <label className="flex flex-col items-center justify-center w-full h-28 border border-dashed border-white/20 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group relative overflow-hidden">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setImageFile(file);
+                    handleImageUpload(file);
+                  }
+                }}
+                className="hidden"
+              />
+
+              {uploading ? (
+                <div className="flex flex-col items-center gap-2 text-gray-400 text-xs">
+                  <Loader2 className="w-5 h-5 text-[#ea580c] animate-spin" />
+                  <span>
+                    {currentLang === "ar" ? "جاري الرفع..." : "Uploading..."}
+                  </span>
+                </div>
+              ) : formData.image ? (
+                <div className="w-full h-full flex items-center justify-between px-4">
+                  <img
+                    src={formData.image}
+                    alt="Product preview"
+                    className="w-20 h-20 object-cover rounded-lg border border-white/10"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                  <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>
+                      {currentLang === "ar" ? "تم الرفع بنجاح" : "Uploaded"}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1.5 text-gray-400 group-hover:text-white transition-colors text-center p-2">
+                  <Upload className="w-5 h-5 text-gray-400 group-hover:text-[#ea580c] transition-colors" />
+                  <span className="text-xs font-bold">
+                    {currentLang === "ar"
+                      ? "اضغط لرفع صورة"
+                      : "Click to upload product image"}
+                  </span>
+                </div>
+              )}
+            </label>
           </div>
 
-          <div className="flex items-center">
+          {/* Availability Toggle */}
+          <div
+            className={`flex items-center gap-2 pt-1 ${currentLang === "ar" ? "flex-row-reverse" : "flex-row"}`}
+          >
             <input
               type="checkbox"
               id="available"
               checked={formData.available}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, available: e.target.checked }))
+                setFormData((prev) => ({
+                  ...prev,
+                  available: e.target.checked,
+                }))
               }
-              className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              className="w-4 h-4 text-[#ea580c] bg-white/5 border-white/20 rounded focus:ring-0 focus:ring-offset-0 focus:outline-none checked:bg-[#ea580c] cursor-pointer"
             />
-            <label htmlFor="available" className="ml-2 text-sm text-gray-700">
-              Available
+            <label
+              htmlFor="available"
+              className="text-xs font-bold text-gray-300 select-none cursor-pointer"
+            >
+              {currentLang === "ar"
+                ? "المنتج متوفر حالياً بالمخزن"
+                : "Product is available for ordering"}
             </label>
           </div>
 
-          <div className="flex gap-3 pt-2">
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-3 border-t border-white/5">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs rounded-xl transition-all border border-white/10"
             >
-              Cancel
+              {currentLang === "ar" ? "إلغاء" : "Cancel"}
             </button>
             <button
               type="submit"
               disabled={saving || !formData.category}
-              className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${
+              className={`flex-1 px-4 py-2.5 text-white font-bold text-xs rounded-xl transition-all ${
                 saving || !formData.category
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700"
+                  ? "bg-gray-700 text-gray-400 cursor-not-allowed border border-white/5"
+                  : "bg-[#ea580c] hover:bg-[#ea580c]/90 border border-[#ea580c]"
               }`}
             >
-              {saving ? "Saving..." : product ? "Update" : "Add Product"}
+              {saving
+                ? currentLang === "ar"
+                  ? "جاري الحفظ..."
+                  : "Saving..."
+                : product
+                  ? currentLang === "ar"
+                    ? "تحديث المنتج"
+                    : "Update Product"
+                  : currentLang === "ar"
+                    ? "إضافة المنتج"
+                    : "Add Product"}
             </button>
           </div>
         </form>
@@ -249,3 +357,5 @@ function ProductModal({ product, categories, loadingCategories, onClose, onSave 
     </div>
   );
 }
+
+export default ProductModal;

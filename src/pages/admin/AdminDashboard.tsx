@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
-import api from '../../api/axios';
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import api from "../../api/axios";
+import { ShoppingBag, Pizza, DollarSign, Loader2 } from "lucide-react";
 
 interface Stats {
   totalOrders: number;
@@ -8,12 +10,14 @@ interface Stats {
 }
 
 function AdminDashboard() {
+  const { t, i18n } = useTranslation();
   const [stats, setStats] = useState<Stats>({
     totalOrders: 0,
     totalProducts: 0,
     totalRevenue: 0,
   });
   const [loading, setLoading] = useState(true);
+  const currentLang = (i18n.language as "en" | "ar") || "en";
 
   useEffect(() => {
     fetchDashboardData();
@@ -23,8 +27,8 @@ function AdminDashboard() {
     setLoading(true);
     try {
       const [productsRes, ordersRes] = await Promise.all([
-        api.get('/products'),
-        api.get('/orders/admin'),
+        api.get("/products"),
+        api.get("/orders/admin"),
       ]);
 
       const products = productsRes.data.products || productsRes.data.data || [];
@@ -32,7 +36,7 @@ function AdminDashboard() {
 
       const totalRevenue = orders.reduce(
         (sum: number, order: { total?: number }) => sum + (order.total || 0),
-        0
+        0,
       );
 
       setStats({
@@ -42,62 +46,81 @@ function AdminDashboard() {
       });
     } catch {
       // Keep default values on error
-    } finally {
+    }
+    {
       setLoading(false);
     }
   };
 
   const statCards = [
     {
-      label: 'Total Orders',
-      value: stats.totalOrders,
-      icon: '📦',
-      color: 'bg-blue-50 text-blue-600',
+      labelKey: "admin.totalOrders",
+      value: stats.totalOrders.toLocaleString(
+        currentLang === "ar" ? "ar-EG" : "en-US",
+      ),
+      icon: ShoppingBag,
+      iconColor: "text-sky-400",
     },
     {
-      label: 'Total Products',
-      value: stats.totalProducts,
-      icon: '🍕',
-      color: 'bg-green-50 text-green-600',
+      labelKey: "admin.totalProducts",
+      value: stats.totalProducts.toLocaleString(
+        currentLang === "ar" ? "ar-EG" : "en-US",
+      ),
+      icon: Pizza,
+      iconColor: "text-emerald-400",
     },
     {
-      label: 'Total Revenue',
+      labelKey: "admin.totalRevenue",
       value: `$${stats.totalRevenue.toFixed(2)}`,
-      icon: '💰',
-      color: 'bg-yellow-50 text-yellow-600',
+      icon: DollarSign,
+      iconColor: "text-[#ea580c]",
     },
   ];
 
   return (
-    <div className="p-4 lg:p-6">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+    <div className="space-y-8 font-sans">
+      {/* Title */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-black font-serif tracking-wide text-white">
+          {t("admin.dashboardOverview")}
+        </h1>
+        <p className="text-xs text-gray-400 mt-1">
+          {t("admin.monitoringSubtitle")}
+        </p>
+      </div>
 
+      {/* Loading State */}
       {loading && (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+        <div className="flex justify-center items-center py-24">
+          <Loader2 className="w-8 h-8 text-[#ea580c] animate-spin" />
         </div>
       )}
 
+      {/* Stats Grid */}
       {!loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {statCards.map((stat) => (
-            <div
-              key={stat.label}
-              className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-xl ${stat.color}`}>
-                  <span className="text-2xl">{stat.icon}</span>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    {stat.label}
+          {statCards.map((stat) => {
+            const IconComponent = stat.icon;
+            return (
+              <div
+                key={stat.labelKey}
+                className="border border-white/10 p-6 rounded-2xl bg-[#0b3b24] flex items-center justify-between group transition-all"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-xs font-bold text-gray-400 tracking-wide">
+                    {t(stat.labelKey)}
                   </h3>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-2xl font-black font-mono text-white tracking-tight">
+                    {stat.value}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center">
+                  <IconComponent className={`w-5 h-5 ${stat.iconColor}`} />
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import {
@@ -54,26 +55,28 @@ interface OrderResponse {
 }
 
 // Status stepper configuration
-const STATUS_STEPS: { key: OrderStatus; label: { en: string; ar: string } }[] = [
-  { key: "pending", label: { en: "Pending", ar: "قيد الانتظار" } },
-  { key: "confirmed", label: { en: "Confirmed", ar: "تم التأكيد" } },
-  { key: "delivered", label: { en: "Delivered", ar: "تم التوصيل" } },
-  { key: "cancelled", label: { en: "Cancelled", ar: "ملغي" } },
-];
+const STATUS_STEPS: { key: OrderStatus; label: { en: string; ar: string } }[] =
+  [
+    { key: "pending", label: { en: "Pending", ar: "قيد الانتظار" } },
+    { key: "confirmed", label: { en: "Confirmed", ar: "تم التأكيد" } },
+    { key: "delivered", label: { en: "Delivered", ar: "تم التوصيل" } },
+    { key: "cancelled", label: { en: "Cancelled", ar: "ملغي" } },
+  ];
 
 function OrderTracking() {
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const currentLang = localStorage.getItem("lang") || "en";
+  const currentLang = (i18n.language as "en" | "ar") || "en";
 
   useEffect(() => {
     const fetchOrder = async () => {
       if (!id) {
-        setError("Order ID not found");
+        setError(t("orderTracking.invalidOrder"));
         setIsLoading(false);
         return;
       }
@@ -85,14 +88,14 @@ function OrderTracking() {
         const response = await api.get<OrderResponse>(`/orders/${id}`);
         setOrder(response.data.data);
       } catch {
-        setError(currentLang === "ar" ? "فشل تحميل الطلب" : "Failed to load order");
+        setError(t("orderTracking.errorLoadingOrder"));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchOrder();
-  }, [id, currentLang]);
+  }, [id, currentLang, t]);
 
   const getLocalizedText = (obj: LocalizedText | undefined): string => {
     if (!obj) return "";
@@ -109,7 +112,7 @@ function OrderTracking() {
 
   const getStepStatus = (
     stepKey: OrderStatus,
-    currentStatus: OrderStatus
+    currentStatus: OrderStatus,
   ): "completed" | "active" | "pending" | "cancelled" => {
     if (isCancelledStatus(currentStatus)) {
       if (stepKey === "cancelled") return "cancelled";
@@ -130,7 +133,7 @@ function OrderTracking() {
     const date = new Date(dateString || "");
     return date.toLocaleDateString(currentLang === "ar" ? "ar-EG" : "en-US", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
@@ -144,11 +147,11 @@ function OrderTracking() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center text-white font-sans">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-          <p className="text-gray-600">
-            {currentLang === "ar" ? "جاري تحميل الطلب..." : "Loading order..."}
+          <Loader2 className="w-10 h-10 text-[#ea580c] animate-spin" />
+          <p className="text-gray-300 font-medium">
+            {t("orderTracking.loadingOrder")}
           </p>
         </div>
       </div>
@@ -158,21 +161,25 @@ function OrderTracking() {
   // Error state
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-xl shadow-md p-8 max-w-md w-full text-center">
+      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center px-4 text-white font-sans">
+        <div className="max-w-md w-full text-center py-12">
           <div className="flex justify-center mb-6">
-            <Package className="w-20 h-20 text-gray-300" />
+            <Package className="w-16 h-16 text-[#ea580c]" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            {currentLang === "ar" ? "خطأ في تحميل الطلب" : "Error Loading Order"}
+          <h2 className="text-2xl font-black mb-3 font-serif">
+            {t("orderTracking.errorLoadingOrder")}
           </h2>
-          <p className="text-gray-600 mb-6">{error || "Order not found"}</p>
+          <p className="text-gray-400 text-sm mb-8">
+            {error || t("orderTracking.invalidOrder")}
+          </p>
           <button
             onClick={() => navigate("/orders")}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            className="w-full flex items-center justify-center gap-2 border border-white/20 text-white py-3.5 rounded-full font-bold hover:bg-white/5 transition-all"
           >
-            <ChevronLeft className="w-5 h-5" />
-            {currentLang === "ar" ? "العودة للطلبات" : "Back to Orders"}
+            <ChevronLeft
+              className={`w-4 h-4 ${currentLang === "ar" ? "rotate-180" : ""}`}
+            />
+            {t("orderTracking.backToOrders")}
           </button>
         </div>
       </div>
@@ -180,28 +187,30 @@ function OrderTracking() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#0b3b24] py-12 text-white font-sans">
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-10">
           <button
             onClick={() => navigate("/orders")}
-            className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+            className="p-2.5 rounded-full border border-white/10 hover:bg-white/5 transition-colors"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+            <ChevronLeft
+              className={`w-5 h-5 text-gray-200 ${currentLang === "ar" ? "rotate-180" : ""}`}
+            />
           </button>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-            {currentLang === "ar" ? "تتبع الطلب" : "Order Tracking"}
+          <h1 className="text-2xl md:text-3xl font-black font-serif tracking-wide">
+            {t("orderTracking.orderTracking")}
           </h1>
         </div>
 
         {/* Order Status Stepper */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-6">
-            {currentLang === "ar" ? "حالة الطلب" : "Order Status"}
+        <div className="border border-white/10 p-6 rounded-2xl bg-[#0b3b24] mb-8">
+          <h2 className="text-base font-bold text-gray-300 mb-8 tracking-wide">
+            {t("orderTracking.orderJourney")}
           </h2>
           <div className="relative">
-            {/* Stepper Container */}
+            {/* Desktop Stepper */}
             <div className="hidden md:flex items-center justify-between">
               {STATUS_STEPS.map((step, index) => {
                 const status = getStepStatus(step.key, order.status);
@@ -210,38 +219,28 @@ function OrderTracking() {
                 return (
                   <div key={step.key} className="flex items-center flex-1">
                     <div className="flex flex-col items-center">
-                      {/* Step Circle */}
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
-                          status === "completed"
-                            ? "bg-green-500 border-green-500"
-                            : status === "active"
-                              ? "bg-blue-600 border-blue-600"
-                              : status === "cancelled"
-                                ? "bg-red-500 border-red-500"
-                                : "bg-gray-100 border-gray-300"
-                        }`}
-                      >
+                      {/* Step Icon */}
+                      <div className="transition-colors">
                         {status === "completed" ? (
-                          <CheckCircle className="w-6 h-6 text-white" />
+                          <CheckCircle className="w-8 h-8 text-emerald-400" />
                         ) : status === "active" ? (
-                          <Clock className="w-6 h-6 text-white" />
+                          <Clock className="w-8 h-8 text-sky-400 animate-pulse" />
                         ) : status === "cancelled" ? (
-                          <XCircle className="w-6 h-6 text-white" />
+                          <XCircle className="w-8 h-8 text-rose-400" />
                         ) : (
-                          <Circle className="w-6 h-6 text-gray-400" />
+                          <Circle className="w-8 h-8 text-white/20" />
                         )}
                       </div>
                       {/* Step Label */}
                       <span
-                        className={`mt-2 text-sm font-medium text-center ${
+                        className={`mt-3 text-xs font-bold tracking-wide transition-colors ${
                           status === "completed"
-                            ? "text-green-600"
+                            ? "text-emerald-400"
                             : status === "active"
-                              ? "text-blue-600"
+                              ? "text-sky-400 font-black"
                               : status === "cancelled"
-                                ? "text-red-600"
-                                : "text-gray-400"
+                                ? "text-rose-400"
+                                : "text-gray-500"
                         }`}
                       >
                         {getLocalizedText(step.label)}
@@ -250,8 +249,10 @@ function OrderTracking() {
                     {/* Connector Line */}
                     {!isLast && (
                       <div
-                        className={`flex-1 h-1 mx-2 rounded ${
-                          status === "completed" ? "bg-green-500" : "bg-gray-200"
+                        className={`flex-1 h-[2px] mx-4 rounded-full transition-colors ${
+                          status === "completed"
+                            ? "bg-emerald-500/50"
+                            : "bg-white/10"
                         }`}
                       />
                     )}
@@ -261,56 +262,45 @@ function OrderTracking() {
             </div>
 
             {/* Mobile Stepper (Vertical) */}
-            <div className="md:hidden space-y-4">
+            <div className="md:hidden space-y-5">
               {STATUS_STEPS.map((step, index) => {
                 const status = getStepStatus(step.key, order.status);
                 const isLast = index === STATUS_STEPS.length - 1;
 
                 return (
                   <div key={step.key} className="flex items-start gap-4">
-                    {/* Step Circle */}
-                    <div className="flex flex-col items-center">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${
-                          status === "completed"
-                            ? "bg-green-500 border-green-500"
-                            : status === "active"
-                              ? "bg-blue-600 border-blue-600"
-                              : status === "cancelled"
-                                ? "bg-red-500 border-red-500"
-                                : "bg-gray-100 border-gray-300"
-                        }`}
-                      >
+                    <div className="flex flex-col items-center flex-shrink-0">
+                      <div>
                         {status === "completed" ? (
-                          <CheckCircle className="w-5 h-5 text-white" />
+                          <CheckCircle className="w-6 h-6 text-emerald-400" />
                         ) : status === "active" ? (
-                          <Clock className="w-5 h-5 text-white" />
+                          <Clock className="w-6 h-6 text-sky-400" />
                         ) : status === "cancelled" ? (
-                          <XCircle className="w-5 h-5 text-white" />
+                          <XCircle className="w-6 h-6 text-rose-400" />
                         ) : (
-                          <Circle className="w-5 h-5 text-gray-400" />
+                          <Circle className="w-6 h-6 text-white/20" />
                         )}
                       </div>
-                      {/* Connector Line */}
                       {!isLast && (
                         <div
-                          className={`w-0.5 h-8 my-1 ${
-                            status === "completed" ? "bg-green-500" : "bg-gray-200"
+                          className={`w-[2px] h-8 my-1 transition-colors ${
+                            status === "completed"
+                              ? "bg-emerald-500/40"
+                              : "bg-white/10"
                           }`}
                         />
                       )}
                     </div>
-                    {/* Step Label */}
-                    <div className="pt-1">
+                    <div className="pt-0.5">
                       <span
-                        className={`font-medium ${
+                        className={`text-sm font-bold tracking-wide ${
                           status === "completed"
-                            ? "text-green-600"
+                            ? "text-emerald-400"
                             : status === "active"
-                              ? "text-blue-600"
+                              ? "text-sky-400 font-black"
                               : status === "cancelled"
-                                ? "text-red-600"
-                                : "text-gray-400"
+                                ? "text-rose-400"
+                                : "text-gray-500"
                         }`}
                       >
                         {getLocalizedText(step.label)}
@@ -323,119 +313,130 @@ function OrderTracking() {
           </div>
         </div>
 
-        {/* Order Details & Items */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Left Column - Order Details */}
-          <div className="space-y-6">
-            {/* Order Info */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Package className="w-5 h-5 text-blue-600" />
-                {currentLang === "ar" ? "معلومات الطلب" : "Order Details"}
+        {/* Order Details & Items Layout Grid */}
+        <div className="grid md:grid-cols-5 gap-6 items-start">
+          {/* Left / Top Columns - Order Metadata */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Summary Block */}
+            <div className="border border-white/10 p-5 rounded-2xl bg-[#0b3b24] space-y-4 text-xs">
+              <h2 className="text-sm font-bold text-gray-300 flex items-center gap-2 pb-2 border-b border-white/5">
+                <Package className="w-4 h-4 text-[#ea580c]" />
+                {t("orderTracking.orderSummary")}
               </h2>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    {currentLang === "ar" ? "رقم الطلب" : "Order ID"}
+                  <span className="text-gray-400">
+                    {t("orderTracking.orderId")}
                   </span>
-                  <span className="font-mono text-sm text-gray-800">
+                  <span className="font-mono text-gray-200 tracking-wider">
                     #{order._id?.slice(-8).toUpperCase() || "--------"}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    {currentLang === "ar" ? "تاريخ الطلب" : "Order Date"}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">
+                    {t("orderTracking.orderDate")}
                   </span>
-                  <span className="text-gray-800 flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
+                  <span className="text-gray-200">
                     {formatDate(order.createdAt)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    {currentLang === "ar" ? "طريقة الدفع" : "Payment Method"}
+                  <span className="text-gray-400">
+                    {t("orderTracking.payment")}
                   </span>
-                  <span className="text-gray-800">
-                    {currentLang === "ar" ? "الدفع عند الاستلام" : "Cash on Delivery"}
+                  <span className="text-gray-200">
+                    {t("checkout.cashOnDelivery")}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Customer Info */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-600" />
-                {currentLang === "ar" ? "معلومات العميل" : "Customer Info"}
+            {/* Customer Info Block */}
+            <div className="border border-white/10 p-5 rounded-2xl bg-[#0b3b24] space-y-4 text-xs">
+              <h2 className="text-sm font-bold text-gray-300 flex items-center gap-2 pb-2 border-b border-white/5">
+                <User className="w-4 h-4 text-[#ea580c]" />
+                {t("orderTracking.recipientInfo")}
               </h2>
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">
-                    {currentLang === "ar" ? "الاسم" : "Name"}
+                <div className="flex justify-between">
+                  <span className="text-gray-400">
+                    {t("orderTracking.fullName")}
                   </span>
-                  <span className="text-gray-800 font-medium">
+                  <span className="text-gray-200 font-medium">
                     {order.fullName || "-"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">
-                    {currentLang === "ar" ? "الهاتف" : "Phone"}
+                <div className="flex justify-between">
+                  <span className="text-gray-400">
+                    {t("orderTracking.phone")}
                   </span>
-                  <span className="text-gray-800">
+                  <span className="text-gray-200 font-mono">
                     {order.phoneNumber || "-"}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Delivery Address */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-blue-600" />
-                {currentLang === "ar" ? "عنوان التوصيل" : "Delivery Address"}
+            {/* Address Block */}
+            <div className="border border-white/10 p-5 rounded-2xl bg-[#0b3b24] space-y-3 text-xs">
+              <h2 className="text-sm font-bold text-gray-300 flex items-center gap-2 pb-1">
+                <MapPin className="w-4 h-4 text-[#ea580c]" />
+                {t("orderTracking.deliveryAddress")}
               </h2>
-              <p className="text-gray-800">{order.address || "-"}</p>
+              <p className="text-gray-400 leading-relaxed font-light">
+                {order.address || "-"}
+              </p>
             </div>
           </div>
 
-          {/* Right Column - Order Items */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Package className="w-5 h-5 text-blue-600" />
-              {currentLang === "ar" ? "المنتجات" : "Items"}
+          {/* Right / Bottom Columns - Order Items Basket */}
+          <div className="md:col-span-3 border border-white/10 p-6 rounded-2xl bg-[#0b3b24]">
+            <h2 className="text-sm font-bold text-gray-300 flex items-center gap-2 pb-4 border-b border-white/5">
+              <Package className="w-4 h-4 text-[#ea580c]" />
+              {t("orderTracking.itemsOrdered")}
             </h2>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-white/5">
               {order.items?.map((item, index) => (
-                <div key={`${item.product?._id || "product"}-${index}`} className="py-4 flex gap-4">
+                <div
+                  key={`${item.product?._id || "prod"}-${index}`}
+                  className="py-4 flex gap-4 items-center"
+                >
                   <img
                     src={item.product?.image || "/placeholder.png"}
                     alt={getLocalizedText(item.product?.name)}
-                    className="w-16 h-16 object-cover rounded-lg bg-gray-100"
+                    className="w-14 h-14 object-cover rounded-xl bg-white/5 border border-white/5 flex-shrink-0"
                   />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-800 truncate">
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    <h3 className="text-sm font-bold text-gray-200 truncate">
                       {getLocalizedText(item.product?.name)}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      {currentLang === "ar" ? "الكمية: " : "Qty: "}
-                      {item.quantity || 0}
+                    <p className="text-xs text-gray-400">
+                      {t("orderTracking.qty")}
+                      <span className="font-mono text-gray-200">
+                        {item.quantity || 0}
+                      </span>
                     </p>
-                    <p className="text-sm font-medium text-gray-800">
-                      {formatPrice((item.price || item.product?.price || 0) * (item.quantity || 0))}
-                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <span className="text-sm font-bold font-mono text-gray-200">
+                      {formatPrice(
+                        (item.price || item.product?.price || 0) *
+                          (item.quantity || 0),
+                      )}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="border-t border-gray-200 mt-4 pt-4">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold text-gray-800">
-                  {currentLang === "ar" ? "المجموع الكلي" : "Total"}
-                </span>
-                <span className="text-xl font-bold text-blue-600">
-                  {formatPrice(order.total)}
-                </span>
-              </div>
+
+            {/* Total Section */}
+            <div className="border-t border-white/5 mt-4 pt-4 flex justify-between items-center">
+              <span className="text-sm font-bold text-gray-300">
+                {t("orderTracking.grandTotal")}
+              </span>
+              <span className="text-lg font-black font-mono text-[#ea580c]">
+                {formatPrice(order.total)}
+              </span>
             </div>
           </div>
         </div>
