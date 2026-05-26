@@ -3,9 +3,26 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { cartService } from "../services/cartService";
-import { setCartItems, setLoading, setError, type CartItem, type LocalizedText } from "../redux/slices/cartSlice";
+import {
+  setCartItems,
+  setLoading,
+  setError,
+  type CartItem,
+  type LocalizedText,
+} from "../redux/slices/cartSlice";
 import type { RootState, AppDispatch } from "../redux/store";
-import { Loader2, ShoppingBag, CreditCard, Banknote, MapPin, Phone, User, Building, FileText, CheckCircle } from "lucide-react";
+import {
+  Loader2,
+  ShoppingBag,
+  CreditCard,
+  Banknote,
+  MapPin,
+  Phone,
+  User,
+  Building,
+  FileText,
+  CheckCircle,
+} from "lucide-react";
 
 type PaymentMethod = "COD";
 
@@ -27,9 +44,11 @@ interface FormErrors {
 function Checkout() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { cartItems, loading: cartLoading, error: cartError } = useSelector(
-    (state: RootState) => state.cart,
-  );
+  const {
+    cartItems,
+    loading: cartLoading,
+    error: cartError,
+  } = useSelector((state: RootState) => state.cart);
   const currentLang = localStorage.getItem("lang") || "en";
 
   const [address, setAddress] = useState<AddressForm>({
@@ -114,15 +133,9 @@ function Checkout() {
 
     try {
       const orderData = {
-        address: {
-          fullName: address.fullName.trim(),
-          phone: address.phone.trim(),
-          city: address.city.trim(),
-          street: address.street.trim(),
-          notes: address.notes.trim(),
-        },
-        paymentMethod,
-        items: cartItems,
+        fullName: address.fullName.trim(),
+        phoneNumber: address.phone.trim(),
+        address: `${address.city.trim()}, ${address.street.trim()}`,
       };
 
       await api.post("/orders", orderData);
@@ -133,7 +146,11 @@ function Checkout() {
       dispatch(setCartItems({ items: [], total: 0 }));
 
       setSuccess(true);
-    } catch {
+    } catch (error) {
+      if (error && typeof error === "object" && "response" in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        console.error("Backend error:", err.response?.data?.message);
+      }
       setSubmitError("Failed to place order. Please try again.");
     } finally {
       setSubmitting(false);
@@ -234,12 +251,16 @@ function Checkout() {
                       onChange={handleInputChange}
                       placeholder="John Doe"
                       className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
-                        formErrors.fullName ? "border-red-500" : "border-gray-300"
+                        formErrors.fullName
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                     />
                   </div>
                   {formErrors.fullName && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.fullName}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {formErrors.fullName}
+                    </p>
                   )}
                 </div>
 
@@ -261,7 +282,9 @@ function Checkout() {
                     />
                   </div>
                   {formErrors.phone && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {formErrors.phone}
+                    </p>
                   )}
                 </div>
 
@@ -283,7 +306,9 @@ function Checkout() {
                     />
                   </div>
                   {formErrors.city && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.city}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {formErrors.city}
+                    </p>
                   )}
                 </div>
 
@@ -305,7 +330,9 @@ function Checkout() {
                     />
                   </div>
                   {formErrors.street && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.street}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {formErrors.street}
+                    </p>
                   )}
                 </div>
 
@@ -361,7 +388,6 @@ function Checkout() {
                     </p>
                   </div>
                 </label>
-
               </div>
             </div>
           </div>
@@ -409,7 +435,9 @@ function Checkout() {
                   <span className="font-medium text-gray-800">Free</span>
                 </div>
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                  <span className="text-lg font-semibold text-gray-800">Total</span>
+                  <span className="text-lg font-semibold text-gray-800">
+                    Total
+                  </span>
                   <span className="text-xl font-bold text-gray-800">
                     ${computedTotal.toFixed(2)}
                   </span>
