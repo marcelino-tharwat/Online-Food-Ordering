@@ -1,5 +1,6 @@
 import { useDispatch } from 'react-redux';
-import { addToCart } from '../redux/slices/cartSlice';
+import { cartService } from '../services/cartService';
+import { setCartItems, setLoading, setError } from '../redux/slices/cartSlice';
 import type { AppDispatch } from '../redux/store';
 
 interface ProductCardProps {
@@ -12,8 +13,18 @@ interface ProductCardProps {
 export default function ProductCard({ id, name, price, image }: ProductCardProps) {
   const dispatch = useDispatch<AppDispatch>();
 
-  const handleAddToCart = () => {
-    dispatch(addToCart({ id, name, price, quantity: 1 }));
+  const handleAddToCart = async () => {
+    try {
+      dispatch(setLoading(true));
+      dispatch(setError(null));
+      await cartService.addToCart(id, 1);
+      const cartData = await cartService.getCart();
+      dispatch(setCartItems(cartData.items));
+    } catch (err) {
+      dispatch(setError('Failed to add item to cart'));
+    } finally {
+      dispatch(setLoading(false));
+    }
   };
 
   return (

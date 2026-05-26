@@ -1,46 +1,56 @@
-﻿import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-interface Product {
-  id: string;
-  name: string;
+export interface LocalizedText {
+  en: string;
+  ar: string;
+}
+
+export interface Product {
+  _id: string;
+  name: LocalizedText;
   price: number;
+  image?: string;
+}
+
+export interface CartItem {
+  product: Product;
   quantity: number;
 }
 
 interface CartState {
-  items: Product[];
+  cartItems: CartItem[];
+  loading: boolean;
+  error: string | null;
+  total: number;
 }
 
 const initialState: CartState = {
-  items: [],
+  cartItems: [],
+  loading: false,
+  error: null,
+  total: 0,
 };
 
 const cartSlice = createSlice({
-  name: 'cart',
+  name: "cart",
   initialState,
   reducers: {
-    addToCart: (state, action: PayloadAction<Product>) => {
-      const existing = state.items.find(item => item.id === action.payload.id);
-      if (existing) {
-        existing.quantity += action.payload.quantity;
-      } else {
-        state.items.push(action.payload);
-      }
+    setCartItems: (
+      state,
+      action: PayloadAction<{ items: CartItem[]; total: number }>,
+    ) => {
+      state.cartItems = action.payload.items;
+      state.total = action.payload.total;
     },
-    removeFromCart: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter(item => item.id !== action.payload);
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
     },
-    updateQuantity: (state, action: PayloadAction<{ id: string; quantity: number }>) => {
-      const item = state.items.find(item => item.id === action.payload.id);
-      if (item) {
-        item.quantity = action.payload.quantity;
-      }
-    },
-    clearCart: (state) => {
-      state.items = [];
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
     },
   },
 });
 
-export const { addToCart, removeFromCart, updateQuantity, clearCart } = cartSlice.actions;
+export const { setCartItems, setLoading, setError } = cartSlice.actions;
+export type { CartItem, Product };
 export default cartSlice.reducer;
