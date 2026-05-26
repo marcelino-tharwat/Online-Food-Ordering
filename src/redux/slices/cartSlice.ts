@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+﻿import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface LocalizedText {
   en: string;
@@ -48,9 +48,19 @@ const cartSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+    clearCart: (state) => {
+      state.cartItems = [];
+      state.total = 0;
+    },
   },
 });
 
-export const { setCartItems, setLoading, setError } = cartSlice.actions;
+export const { setCartItems, setLoading, setError, clearCart } =
+  cartSlice.actions;
+
+// Selector for total item count
+export const selectCartItemCount = (state: { cart: CartState }): number =>
+  state.cart.cartItems.reduce((count, item) => count + item.quantity, 0);
+
 export type { CartItem, Product };
 export default cartSlice.reducer;

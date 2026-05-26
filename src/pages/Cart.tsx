@@ -5,6 +5,7 @@ import {
   setCartItems,
   setLoading,
   setError,
+  clearCart,
   type CartItem,
   type LocalizedText,
 } from "../redux/slices/cartSlice";
@@ -18,7 +19,6 @@ function Cart() {
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const currentLang = localStorage.getItem("lang") || "en";
-
   const getLocalizedText = (obj: LocalizedText | undefined): string => {
     if (!obj) return "";
     return currentLang === "ar" ? obj.ar : obj.en;
@@ -77,7 +77,7 @@ function Cart() {
       dispatch(setLoading(true));
       dispatch(setError(null));
       await cartService.clearCart();
-      dispatch(setCartItems({ items: [], total: 0 }));
+      dispatch(clearCart());
     } catch (err) {
       dispatch(setError("Failed to clear cart"));
     } finally {
@@ -126,7 +126,7 @@ function Cart() {
             Your Cart is Empty
           </h2>
           <p className="text-gray-500 mb-6">
-            Looks like you haven't added anything to your cart yet.
+            Looks like you have not added anything to your cart yet.
           </p>
           <a
             href="/menu"
@@ -167,9 +167,7 @@ function Cart() {
                   <h3 className="text-lg font-semibold text-gray-800">
                     {getLocalizedText(item.product.name)}
                   </h3>
-                  <p className="text-gray-600 mt-1">
-                    ${item.product.price.toFixed(2)}
-                  </p>
+                  <p className="text-gray-600 mt-1"></p>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -200,9 +198,7 @@ function Cart() {
                   </button>
                 </div>
 
-                <div className="text-lg font-semibold text-gray-800 w-24 text-right">
-                  ${(item.product.price * item.quantity).toFixed(2)}
-                </div>
+                <div className="text-lg font-semibold text-gray-800 w-24 text-right"></div>
 
                 <button
                   onClick={() => handleRemoveItem(item.product._id)}
@@ -221,9 +217,7 @@ function Cart() {
             <h2 className="text-xl font-semibold text-gray-800">
               Order Summary
             </h2>
-            <div className="text-2xl font-bold text-gray-800">
-              Total: ${computedTotal.toFixed(2)}
-            </div>
+            <div className="text-2xl font-bold text-gray-800">Total:</div>
           </div>
 
           <div className="flex gap-4">

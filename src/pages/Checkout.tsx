@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { cartService } from "../services/cartService";
 import {
-  setCartItems,
+  setCartItems, clearCart,
   setLoading,
   setError,
   type CartItem,
@@ -143,7 +143,7 @@ function Checkout() {
       // Clear cart via backend
       await cartService.clearCart();
       // Refresh Redux cart state
-      dispatch(setCartItems({ items: [], total: 0 }));
+      dispatch(clearCart());
 
       setSuccess(true);
     } catch (error) {

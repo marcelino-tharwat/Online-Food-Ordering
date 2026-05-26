@@ -1,4 +1,4 @@
-﻿import { createBrowserRouter, RouterProvider } from "react-router-dom";
+﻿import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import PrivateRoute from "../components/PrivateRoute";
 import AdminRoute from "../components/AdminRoute";
 import MainLayout from "../layouts/MainLayout";
@@ -42,6 +42,7 @@ const router = createBrowserRouter([
       {
         element: <AdminRoute />,
         children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
           { path: "dashboard", element: <AdminDashboard /> },
           { path: "products", element: <AdminProducts /> },
           { path: "orders", element: <AdminOrders /> },

@@ -1,7 +1,9 @@
 import axios, { type InternalAxiosRequestConfig, type AxiosError } from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    "https://online-food-ordering-api-production.up.railway.app/api",
   headers: {
     "Content-Type": "application/json",
   },

@@ -39,9 +39,21 @@ function Login() {
 
     setIsLoading(true);
     try {
-      const { data } = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', data.token);
-      dispatch(setUser(data.user));
+      const response = await api.post('/auth/login', { email, password });
+      const responseData = response.data;
+
+      // Handle both wrapped { data: { token, user } } and unwrapped { token, user } responses
+      const token = responseData?.token ?? responseData?.data?.token;
+      const user = responseData?.user ?? responseData?.data?.user;
+
+      if (!token || !user) {
+        setApiError('Invalid response from server');
+        setIsLoading(false);
+        return;
+      }
+
+      localStorage.setItem('token', token);
+      dispatch(setUser(user));
       navigate('/');
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
