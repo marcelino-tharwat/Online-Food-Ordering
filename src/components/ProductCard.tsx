@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { cartService } from '../services/cartService';
-import { setCartItems, setLoading, setError } from '../redux/slices/cartSlice';
+import { setLoading, setError, optimisticAddItem } from '../redux/slices/cartSlice';
 import type { AppDispatch } from '../redux/store';
 
 interface ProductCardProps {
@@ -14,13 +14,22 @@ export default function ProductCard({ id, name, price, image }: ProductCardProps
   const dispatch = useDispatch<AppDispatch>();
 
   const handleAddToCart = async () => {
+    // Create minimal product object for optimistic update
+    const product = {
+      _id: id,
+      name: { en: name, ar: name },
+      price,
+      image,
+    };
+
+    // Optimistically update UI instantly - no waiting for API
+    dispatch(optimisticAddItem({ productId: id, product }));
+
     try {
       dispatch(setLoading(true));
       dispatch(setError(null));
       await cartService.addToCart(id, 1);
-      const cartData = await cartService.getCart();
-      dispatch(setCartItems({ items: cartData.items, total: cartData.total }));
-    } catch (err) {
+    } catch {
       dispatch(setError('Failed to add item to cart'));
     } finally {
       dispatch(setLoading(false));

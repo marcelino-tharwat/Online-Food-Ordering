@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { cartService } from "../services/cartService";
 import {
-  setCartItems,
+  setCartItems, optimisticUpdateQuantity, optimisticRemoveItem,
   setLoading,
   setError,
   clearCart,
@@ -248,3 +248,4 @@ function Cart() {
 }
 
 export default Cart;
+
