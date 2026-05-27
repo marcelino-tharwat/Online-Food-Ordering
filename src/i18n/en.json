@@ -122,7 +122,8 @@
     "loadCartError": "Failed to load cart",
     "emptyCartError": "Failed to clear cart",
     "orderSummary": "Order Summary",
-    "retry": "Try Again"
+    "retry": "Try Again",
+    "adding": "Adding..."
   },
   "orders": {
     "myOrders": "My Orders",

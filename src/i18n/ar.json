@@ -122,7 +122,8 @@
     "loadCartError": "فشل تحميل العربة",
     "emptyCartError": "فشل إفراغ العربة",
     "orderSummary": "ملخص الطلب",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "adding": "جاري الإضافة..."
   },
   "orders": {
     "myOrders": "طلباتي",
