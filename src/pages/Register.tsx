@@ -22,11 +22,19 @@ function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const registerSchema = z.object({
-    name: z.string().min(3, "Name must be at least 3 characters"),
-    email: z.string().email("Invalid email"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-  });
+  const registerSchema = z
+    .object({
+      name: z.string().min(3, "Name must be at least 3 characters"),
+      email: z.string().email("Invalid email"),
+      password: z.string().min(6, "Password must be at least 6 characters"),
+      confirmPassword: z
+        .string()
+        .min(6, "Password must be at least 6 characters"),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      path: ["confirmPassword"],
+      message: "Passwords do not match",
+    });
 
   const validateForm = () => {
     const result = registerSchema.safeParse({
