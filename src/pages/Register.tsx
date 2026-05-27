@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axios";
+import { z } from "zod";
 
 function Register() {
   const { t } = useTranslation();
@@ -16,38 +17,39 @@ function Register() {
     password?: string;
     confirmPassword?: string;
   }>({});
+
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const validate = () => {
-    const newErrors: typeof errors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const registerSchema = z.object({
+    name: z.string().min(3, "Name must be at least 3 characters"),
+    email: z.string().email("Invalid email"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+  });
 
-    if (!name) {
-      newErrors.name = "auth.nameRequired";
+  const validateForm = () => {
+    const result = registerSchema.safeParse({
+      name,
+      email,
+      password,
+      confirmPassword,
+    });
+
+    if (!result.success) {
+      const formErrors: typeof errors = {};
+
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0] as keyof typeof errors;
+        formErrors[field] = issue.message;
+      });
+
+      setErrors(formErrors);
+      return false;
     }
 
-    if (!email) {
-      newErrors.email = "auth.emailRequired";
-    } else if (!emailRegex.test(email)) {
-      newErrors.email = "auth.invalidEmailFormat";
-    }
-
-    if (!password) {
-      newErrors.password = "auth.passwordRequired";
-    } else if (password.length < 6) {
-      newErrors.password = "auth.passwordMinLength";
-    }
-
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "auth.confirmPasswordRequired";
-    } else if (confirmPassword !== password) {
-      newErrors.confirmPassword = "auth.passwordsMismatch";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -55,7 +57,7 @@ function Register() {
     setApiError("");
     setSuccessMessage("");
 
-    if (!validate()) return;
+    if (!validateForm()) return;
 
     setIsLoading(true);
     try {

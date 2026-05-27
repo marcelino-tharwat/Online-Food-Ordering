@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../api/axios";
+import { z } from "zod";
 import { cartService } from "../services/cartService";
 import {
   setCartItems,
@@ -59,6 +60,7 @@ function Checkout() {
     street: "",
     notes: "",
   });
+
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -94,22 +96,51 @@ function Checkout() {
     0,
   );
 
+  // const validateForm = (): boolean => {
+  //   const errors: FormErrors = {};
+  //   if (!address.fullName.trim()) {
+  //     errors.fullName = t("checkout.fullNameRequired");
+  //   }
+  //   if (!address.phone.trim()) {
+  //     errors.phone = t("checkout.phoneRequired");
+  //   }
+  //   if (!address.city.trim()) {
+  //     errors.city = t("checkout.cityRequired");
+  //   }
+  //   if (!address.street.trim()) {
+  //     errors.street = t("checkout.streetRequired");
+  //   }
+  //   setFormErrors(errors);
+  //   return Object.keys(errors).length === 0;
+  // };
+
+  const checkoutSchema = z.object({
+    fullName: z.string().min(3, "Full name is too short"),
+    phone: z
+      .string()
+      .regex(/^01[0-2,5]{1}[0-9]{8}$/, "Invalid Egyptian phone number"),
+    city: z.string().min(2, "City is required"),
+    street: z.string().min(5, "Street is too short"),
+    notes: z.string().optional(),
+  });
+
   const validateForm = (): boolean => {
-    const errors: FormErrors = {};
-    if (!address.fullName.trim()) {
-      errors.fullName = t("checkout.fullNameRequired");
+    const result = checkoutSchema.safeParse(address);
+
+    if (!result.success) {
+      const errors: FormErrors = {};
+
+      (result.error as z.ZodError).issues.forEach((err) => {
+        const field = err.path[0] as keyof FormErrors;
+        errors[field] = err.message;
+      });
+
+      setFormErrors(errors);
+      return false;
     }
-    if (!address.phone.trim()) {
-      errors.phone = t("checkout.phoneRequired");
-    }
-    if (!address.city.trim()) {
-      errors.city = t("checkout.cityRequired");
-    }
-    if (!address.street.trim()) {
-      errors.street = t("checkout.streetRequired");
-    }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+
+    setFormErrors({});
+    return true;
   };
 
   const handleInputChange = (
