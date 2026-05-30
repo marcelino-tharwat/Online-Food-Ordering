@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axios";
 import { z } from "zod";
+import { Input } from "../components/ui/Input";
+import { Button } from "../components/ui/Button";
+import { Mail, Lock, User, AlertCircle, CheckCircle, UserPlus } from "lucide-react";
 
 function Register() {
   const { t } = useTranslation();
@@ -17,23 +20,20 @@ function Register() {
     password?: string;
     confirmPassword?: string;
   }>({});
-
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
   const registerSchema = z
     .object({
-      name: z.string().min(3, "Name must be at least 3 characters"),
-      email: z.string().email("Invalid email"),
-      password: z.string().min(6, "Password must be at least 6 characters"),
-      confirmPassword: z
-        .string()
-        .min(6, "Password must be at least 6 characters"),
+      name: z.string().min(3, t("validation.nameRequired")),
+      email: z.string().email(t("validation.invalidEmail")),
+      password: z.string().min(6, t("validation.passwordMinLength")),
+      confirmPassword: z.string().min(1, t("validation.confirmPasswordRequired")),
     })
     .refine((data) => data.password === data.confirmPassword, {
       path: ["confirmPassword"],
-      message: "Passwords do not match",
+      message: t("validation.passwordsMismatch"),
     });
 
   const validateForm = () => {
@@ -43,19 +43,15 @@ function Register() {
       password,
       confirmPassword,
     });
-
     if (!result.success) {
       const formErrors: typeof errors = {};
-
       result.error.issues.forEach((issue) => {
         const field = issue.path[0] as keyof typeof errors;
         formErrors[field] = issue.message;
       });
-
       setErrors(formErrors);
       return false;
     }
-
     setErrors({});
     return true;
   };
@@ -87,138 +83,97 @@ function Register() {
   };
 
   return (
-    // الخلفية الـ Off-white الدافية المريحة المتناسقة مع الـ Layout الأساسي
-    <div className="bg-[#0b3b24] flex justify-center items-center min-h-screen px-4 py-12 font-sans selection:bg-[#ea580c] selection:text-white">
-      {/* الكارد بالأخضر الداكن الملكي مع حواف دائرية عريضة وشادو ناعم */}
-      <div className="bg-[#0b3b24] text-white p-8 md:p-10 rounded-2xl shadow-xl w-full max-w-md border border-[#144f33] transition-all duration-300">
-        <h2 className="text-3xl font-extrabold mb-2 text-center tracking-wide font-serif">
-          {t("auth.createAccount")}
-        </h2>
-        <p className="text-gray-400 text-sm text-center mb-8">
-          {t("auth.joinSubtitle")}
-        </p>
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm animate-fade-in">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-black font-serif tracking-tight mb-2">
+            {t("auth.createAccount")}
+          </h2>
+          <p className="text-text-secondary text-sm">
+            {t("auth.joinSubtitle")}
+          </p>
+        </div>
 
-        {apiError && (
-          <div className="mb-6 p-3 bg-red-900/40 border border-red-700 text-red-200 rounded-xl text-sm text-center font-medium">
-            {apiError}
-          </div>
-        )}
-        {successMessage && (
-          <div className="mb-6 p-3 bg-emerald-950/60 border border-emerald-600 text-emerald-200 rounded-xl text-sm text-center font-medium">
-            {successMessage}
-          </div>
-        )}
+        <div className="bg-surface-card border border-border-light rounded-2xl p-6 md:p-8 shadow-lg">
+          {apiError && (
+            <div className="mb-5 p-3 bg-error-bg border border-error-border text-error-text rounded-xl text-xs font-medium flex items-center gap-2" role="alert">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {apiError}
+            </div>
+          )}
+          {successMessage && (
+            <div className="mb-5 p-3 bg-success-bg border border-success/20 text-success-text rounded-xl text-xs font-medium flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 flex-shrink-0" />
+              {successMessage}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block mb-1.5 text-sm font-semibold tracking-wide text-gray-200">
-              {t("auth.name")}
-            </label>
-            <input
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
               type="text"
-              className={`w-full px-4 py-2.5 bg-[#114b30] text-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ea580c] transition-all placeholder-gray-500 ${
-                errors.name
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-[#1a5f3e]"
-              }`}
+              label={t("auth.name")}
               placeholder="John Doe"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              error={errors.name}
+              icon={<User className="w-4 h-4" />}
+              name="name"
             />
-            {errors.name && (
-              <p className="text-red-400 text-xs mt-1 font-medium px-1">
-                ⚠️ {t(errors.name)}
-              </p>
-            )}
-          </div>
 
-          <div>
-            <label className="block mb-1.5 text-sm font-semibold tracking-wide text-gray-200">
-              {t("auth.emailAddress")}
-            </label>
-            <input
+            <Input
               type="email"
-              className={`w-full px-4 py-2.5 bg-[#114b30] text-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ea580c] transition-all placeholder-gray-500 ${
-                errors.email
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-[#1a5f3e]"
-              }`}
+              label={t("auth.emailAddress")}
               placeholder="example@mail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              error={errors.email}
+              icon={<Mail className="w-4 h-4" />}
+              name="email"
             />
-            {errors.email && (
-              <p className="text-red-400 text-xs mt-1 font-medium px-1">
-                ⚠️ {t(errors.email)}
-              </p>
-            )}
-          </div>
 
-          <div>
-            <label className="block mb-1.5 text-sm font-semibold tracking-wide text-gray-200">
-              {t("auth.password")}
-            </label>
-            <input
+            <Input
               type="password"
-              className={`w-full px-4 py-2.5 bg-[#114b30] text-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ea580c] transition-all placeholder-gray-500 ${
-                errors.password
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-[#1a5f3e]"
-              }`}
+              label={t("auth.password")}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              error={errors.password}
+              icon={<Lock className="w-4 h-4" />}
+              name="password"
             />
-            {errors.password && (
-              <p className="text-red-400 text-xs mt-1 font-medium px-1">
-                ⚠️ {t(errors.password)}
-              </p>
-            )}
-          </div>
 
-          <div>
-            <label className="block mb-1.5 text-sm font-semibold tracking-wide text-gray-200">
-              {t("auth.confirmPassword")}
-            </label>
-            <input
+            <Input
               type="password"
-              className={`w-full px-4 py-2.5 bg-[#114b30] text-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#ea580c] transition-all placeholder-gray-500 ${
-                errors.confirmPassword
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-[#1a5f3e]"
-              }`}
+              label={t("auth.confirmPassword")}
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              error={errors.confirmPassword}
+              icon={<Lock className="w-4 h-4" />}
+              name="confirmPassword"
             />
-            {errors.confirmPassword && (
-              <p className="text-red-400 text-xs mt-1 font-medium px-1">
-                ⚠️ {t(errors.confirmPassword)}
-              </p>
-            )}
+
+            <Button
+              type="submit"
+              fullWidth
+              size="lg"
+              loading={isLoading}
+              icon={<UserPlus className="w-4 h-4" />}
+              className="mt-2"
+            >
+              {t("auth.signup")}
+            </Button>
+          </form>
+
+          <div className="mt-6 pt-5 border-t border-border-light text-center text-sm text-text-secondary">
+            {t("auth.alreadyHaveAccount")}{" "}
+            <Link
+              to="/login"
+              className="text-brand-orange font-bold hover:text-brand-orange-light transition-colors"
+            >
+              {t("auth.loginHere")}
+            </Link>
           </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-[#ea580c] text-white py-3 px-4 rounded-full font-bold tracking-wide shadow-md hover:bg-[#d94e06] active:scale-[0.99] disabled:bg-gray-600 disabled:text-gray-400 disabled:scale-100 transition-all duration-200 flex justify-center items-center mt-6 text-base"
-          >
-            {isLoading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            ) : (
-              t("auth.signup")
-            )}
-          </button>
-        </form>
-
-        <div className="mt-6 pt-6 border-t border-[#1a5f3e] text-center text-sm text-gray-400">
-          {t("auth.alreadyHaveAccount")}
-          <Link
-            to="/login"
-            className="text-[#ea580c] font-bold hover:underline ml-1"
-          >
-            {t("auth.loginHere")}
-          </Link>
         </div>
       </div>
     </div>

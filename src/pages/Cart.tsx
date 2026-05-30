@@ -14,7 +14,7 @@ import {
   type LocalizedText,
 } from "../redux/slices/cartSlice";
 import type { RootState, AppDispatch } from "../redux/store";
-import { Trash2, Plus, Minus, ShoppingBag, Loader2 } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 
 function Cart() {
   const dispatch = useDispatch<AppDispatch>();
@@ -95,10 +95,10 @@ function Cart() {
 
   if (loading && (cartItems || []).length === 0) {
     return (
-      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center text-white">
+      <div className="min-h-[70vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-[#ea580c] animate-spin" />
-          <p className="text-gray-300 font-medium">{t("cart.loadingCart")}</p>
+          <Loader2 className="w-10 h-10 text-brand-orange animate-spin" />
+          <p className="text-text-secondary text-sm font-medium animate-pulse-soft">{t("cart.loadingCart")}</p>
         </div>
       </div>
     );
@@ -106,12 +106,12 @@ function Cart() {
 
   if (error && (cartItems || []).length === 0) {
     return (
-      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center text-white p-4">
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
         <div className="text-center max-w-sm">
-          <p className="text-red-400 text-lg mb-6 font-medium">⚠️ {error}</p>
+          <p className="text-error-text text-lg mb-6 font-medium">{error}</p>
           <button
             onClick={fetchCart}
-            className="bg-[#ea580c] text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-[#d94e06] transition-all"
+            className="px-6 py-3 bg-brand-orange text-white rounded-xl font-bold hover:bg-brand-orange-hover transition-all shadow-md"
           >
             {t("common.tryAgain")}
           </button>
@@ -122,16 +122,18 @@ function Cart() {
 
   if ((cartItems || []).length === 0) {
     return (
-      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center text-white p-4">
-        <div className="text-center max-w-sm">
-          <ShoppingBag className="w-16 h-16 text-[#ea580c] mx-auto mb-6 opacity-90" />
-          <h2 className="text-2xl font-black mb-3 font-serif">
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
+        <div className="text-center max-w-sm animate-fade-in">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-brand-orange/10 border border-brand-orange/20 flex items-center justify-center">
+            <ShoppingBag className="w-8 h-8 text-brand-orange" />
+          </div>
+          <h2 className="text-2xl font-black mb-3 font-serif tracking-tight">
             {t("cart.yourCartEmpty")}
           </h2>
-          <p className="text-gray-400 text-sm mb-8">{t("cart.emptyMessage")}</p>
+          <p className="text-text-secondary text-sm mb-8">{t("cart.emptyMessage")}</p>
           <button
             onClick={() => navigate("/menu")}
-            className="bg-[#ea580c] text-white px-8 py-3.5 rounded-full font-bold shadow-sm hover:bg-[#d94e06] transition-all inline-block w-full text-center"
+            className="px-8 py-3.5 bg-gradient-orange text-white rounded-xl font-bold shadow-md shadow-orange-900/30 hover:shadow-lg transition-all inline-flex items-center gap-2"
           >
             {t("cart.browseMenu")}
           </button>
@@ -140,113 +142,111 @@ function Cart() {
     );
   }
 
+  const Arrow = currentLang === "ar" ? ArrowLeft : ArrowRight;
+
   return (
-    <div className="min-h-screen bg-[#0b3b24] py-12 text-white font-sans">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-black mb-10 font-serif tracking-wide">
+    <div className="py-8 md:py-12 px-4 md:px-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl md:text-3xl font-black font-serif tracking-tight mb-8">
           {t("cart.yourCart")}
         </h1>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-300 px-4 py-3 rounded-xl mb-6 text-sm text-center">
+          <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2" role="alert">
+            <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
             {error}
           </div>
         )}
 
-        <div className="space-y-6 mb-10">
-          {(cartItems || []).map((item: CartItem) => (
-            <div
-              key={item.product._id}
-              className="pb-6 flex flex-col sm:flex-row items-center gap-6 border-b border-white/10 last:border-0"
-            >
-              <img
-                src={item.product.image || "/placeholder.png"}
-                alt={getLocalizedText(item.product.name)}
-                className="w-20 h-20 object-cover rounded-xl bg-[#0b3b24] border border-white/10"
-              />
-
-              <div className="flex-1 text-center sm:text-left">
-                <h3 className="text-lg font-bold">
-                  {getLocalizedText(item.product.name)}
-                </h3>
-                <p className="text-gray-400 text-sm mt-1 font-mono">
-                  ${item.product.price.toFixed(2)}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4 bg-[#0b3b24] border border-white/20 px-3 py-1.5 rounded-full">
-                <button
-                  onClick={() =>
-                    handleUpdateQuantity(item.product._id, item.quantity - 1)
-                  }
-                  disabled={
-                    actionLoading === item.product._id || item.quantity <= 1
-                  }
-                  className="p-1 text-gray-400 hover:text-white disabled:opacity-20 transition-all"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-
-                <span className="w-6 text-center font-bold font-mono text-sm">
-                  {item.quantity}
-                </span>
-
-                <button
-                  onClick={() =>
-                    handleUpdateQuantity(item.product._id, item.quantity + 1)
-                  }
-                  disabled={actionLoading === item.product._id}
-                  className="p-1 text-gray-400 hover:text-white disabled:opacity-20 transition-all"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="text-lg font-black font-mono w-24 text-center sm:text-right">
-                ${(item.product.price * item.quantity).toFixed(2)}
-              </div>
-
-              <button
-                onClick={() => handleRemoveItem(item.product._id)}
-                disabled={actionLoading === item.product._id}
-                className="p-2 text-gray-400 hover:text-red-400 transition-colors rounded-full"
+        <div className="bg-surface-card border border-border-light rounded-2xl overflow-hidden shadow-lg">
+          <div className="divide-y divide-border-light">
+            {(cartItems || []).map((item: CartItem) => (
+              <div
+                key={item.product._id}
+                className="p-4 md:p-5 flex items-center gap-4 animate-fade-in"
               >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
+                <img
+                  src={item.product.image || "/placeholder.png"}
+                  alt={getLocalizedText(item.product.name)}
+                  className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-xl bg-surface-overlay border border-border-light flex-shrink-0"
+                />
 
-        <div className="pt-8 border-t border-white/10">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-lg font-bold text-gray-300 font-serif">
-              {t("checkout.orderSummary")}
-            </h2>
-            <div className="text-3xl font-black font-mono text-[#ea580c]">
-              ${computedTotal.toFixed(2)}
-            </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm md:text-base font-bold text-text-primary truncate">
+                    {getLocalizedText(item.product.name)}
+                  </h3>
+                  <p className="text-xs text-text-tertiary mt-0.5 font-mono">
+                    ${item.product.price.toFixed(2)}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 bg-surface-overlay border border-border-light rounded-xl p-1">
+                  <button
+                    onClick={() =>
+                      handleUpdateQuantity(item.product._id, item.quantity - 1)
+                    }
+                    disabled={item.quantity <= 1}
+                    className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="w-8 text-center font-bold font-mono text-sm text-text-primary">
+                    {item.quantity}
+                  </span>
+                  <button
+                    onClick={() =>
+                      handleUpdateQuantity(item.product._id, item.quantity + 1)
+                    }
+                    className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="text-right flex-shrink-0 min-w-[80px]">
+                  <p className="text-base font-black font-mono text-brand-orange">
+                    ${(item.product.price * item.quantity).toFixed(2)}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => handleRemoveItem(item.product._id)}
+                  className="p-2 rounded-xl text-text-tertiary hover:text-error hover:bg-error/10 transition-all flex-shrink-0"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={handleClearCart}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 px-6 py-3.5 border border-white/20 text-gray-300 rounded-full font-semibold hover:text-red-400 hover:border-red-400/40 disabled:opacity-50 transition-all text-sm"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-              {t("cart.clearCart")}
-            </button>
+          <div className="p-5 md:p-6 border-t border-border-light bg-surface-overlay/50">
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-sm font-bold text-text-secondary">
+                {t("checkout.orderSummary")}
+              </span>
+              <div className="text-2xl md:text-3xl font-black font-mono text-brand-orange">
+                ${computedTotal.toFixed(2)}
+              </div>
+            </div>
 
-            <button
-              onClick={() => navigate("/checkout")}
-              className="flex-1 flex items-center justify-center gap-2 bg-[#ea580c] text-white py-3.5 px-6 rounded-full font-bold tracking-wide hover:bg-[#d94e06] transition-all text-base shadow-sm"
-            >
-              {t("cart.proceedCheckout")}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleClearCart}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 px-5 py-3 border border-border-medium text-text-secondary rounded-xl font-semibold hover:text-error hover:border-error/40 disabled:opacity-50 transition-all text-sm"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t("cart.clearCart")}
+              </button>
+
+              <button
+                onClick={() => navigate("/checkout")}
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-orange text-white py-3 px-6 rounded-xl font-bold tracking-wide hover:shadow-lg hover:shadow-orange-900/30 transition-all text-base shadow-md shadow-orange-900/30"
+              >
+                {t("cart.proceedCheckout")}
+                <Arrow className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

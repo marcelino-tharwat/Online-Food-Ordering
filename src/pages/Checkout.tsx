@@ -25,7 +25,10 @@ import {
   Building,
   FileText,
   CheckCircle,
+  AlertCircle,
 } from "lucide-react";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
 
 type PaymentMethod = "COD";
 
@@ -60,7 +63,6 @@ function Checkout() {
     street: "",
     notes: "",
   });
-
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -96,49 +98,27 @@ function Checkout() {
     0,
   );
 
-  // const validateForm = (): boolean => {
-  //   const errors: FormErrors = {};
-  //   if (!address.fullName.trim()) {
-  //     errors.fullName = t("checkout.fullNameRequired");
-  //   }
-  //   if (!address.phone.trim()) {
-  //     errors.phone = t("checkout.phoneRequired");
-  //   }
-  //   if (!address.city.trim()) {
-  //     errors.city = t("checkout.cityRequired");
-  //   }
-  //   if (!address.street.trim()) {
-  //     errors.street = t("checkout.streetRequired");
-  //   }
-  //   setFormErrors(errors);
-  //   return Object.keys(errors).length === 0;
-  // };
-
   const checkoutSchema = z.object({
-    fullName: z.string().min(3, "Full name is too short"),
+    fullName: z.string().min(3, t("checkout.fullNameRequired")),
     phone: z
       .string()
-      .regex(/^01[0-2,5]{1}[0-9]{8}$/, "Invalid Egyptian phone number"),
-    city: z.string().min(2, "City is required"),
-    street: z.string().min(5, "Street is too short"),
+      .regex(/^01[0-2,5]{1}[0-9]{8}$/, t("checkout.phoneRequired")),
+    city: z.string().min(2, t("checkout.cityRequired")),
+    street: z.string().min(5, t("checkout.streetRequired")),
     notes: z.string().optional(),
   });
 
   const validateForm = (): boolean => {
     const result = checkoutSchema.safeParse(address);
-
     if (!result.success) {
       const errors: FormErrors = {};
-
       (result.error as z.ZodError).issues.forEach((err) => {
         const field = err.path[0] as keyof FormErrors;
         errors[field] = err.message;
       });
-
       setFormErrors(errors);
       return false;
     }
-
     setFormErrors({});
     return true;
   };
@@ -169,7 +149,6 @@ function Checkout() {
         phoneNumber: address.phone.trim(),
         address: `${address.city.trim()}, ${address.street.trim()}`,
       };
-
       await api.post("/orders", orderData);
       await cartService.clearCart();
       dispatch(clearCart());
@@ -180,10 +159,7 @@ function Checkout() {
         console.error("Backend error:", err.response?.data?.message);
       }
       setSubmitError(
-        t(
-          "checkout.placeOrderError",
-          "Failed to place order. Please try again.",
-        ),
+        t("checkout.placeOrderError", "Failed to place order. Please try again."),
       );
     } finally {
       setSubmitting(false);
@@ -192,23 +168,24 @@ function Checkout() {
 
   if (success) {
     return (
-      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center px-4 text-white font-sans">
-        <div className="max-w-md w-full text-center py-12">
-          <div className="flex justify-center mb-6">
-            <CheckCircle className="w-16 h-16 text-[#ea580c]" />
+      <div className="min-h-[70vh] flex items-center justify-center px-4">
+        <div className="max-w-sm w-full text-center animate-fade-in">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-success-bg border border-success/20 flex items-center justify-center">
+            <CheckCircle className="w-8 h-8 text-success" />
           </div>
-          <h2 className="text-2xl font-black mb-3 font-serif">
+          <h2 className="text-2xl font-black mb-3 font-serif tracking-tight">
             {t("checkout.orderPlaced")}
           </h2>
-          <p className="text-gray-300 text-sm mb-8">
+          <p className="text-text-secondary text-sm mb-8">
             {t("checkout.successMessage")}
           </p>
-          <button
+          <Button
             onClick={() => navigate("/orders")}
-            className="w-full bg-[#ea580c] text-white py-3.5 rounded-full font-bold shadow-sm hover:bg-[#d94e06] transition-all"
+            fullWidth
+            size="lg"
           >
             {t("checkout.viewOrders")}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -216,10 +193,10 @@ function Checkout() {
 
   if (cartLoading && cartItems.length === 0) {
     return (
-      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center text-white">
+      <div className="min-h-[70vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-[#ea580c] animate-spin" />
-          <p className="text-gray-300 font-medium">
+          <Loader2 className="w-10 h-10 text-brand-orange animate-spin" />
+          <p className="text-text-secondary text-sm font-medium animate-pulse-soft">
             {t("checkout.loadingCheckout", "Loading checkout...")}
           </p>
         </div>
@@ -229,247 +206,175 @@ function Checkout() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-[80vh] bg-[#0b3b24] flex items-center justify-center px-4 text-white font-sans">
-        <div className="max-w-md w-full text-center py-12">
-          <div className="flex justify-center mb-6">
-            <ShoppingBag className="w-16 h-16 text-[#ea580c] opacity-90" />
+      <div className="min-h-[70vh] flex items-center justify-center px-4">
+        <div className="max-w-sm w-full text-center animate-fade-in">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-brand-orange/10 border border-brand-orange/20 flex items-center justify-center">
+            <ShoppingBag className="w-8 h-8 text-brand-orange" />
           </div>
-          <h2 className="text-2xl font-black mb-3 font-serif">
+          <h2 className="text-2xl font-black mb-3 font-serif tracking-tight">
             {t("checkout.emptyCart")}
           </h2>
-          <p className="text-gray-400 text-sm mb-8">
+          <p className="text-text-secondary text-sm mb-8">
             {t("checkout.emptyMessage")}
           </p>
-          <button
+          <Button
             onClick={() => navigate("/menu")}
-            className="w-full bg-[#ea580c] text-white py-3.5 rounded-full font-bold shadow-sm hover:bg-[#d94e06] transition-all"
+            fullWidth
+            size="lg"
           >
             {t("checkout.browseMenu")}
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b3b24] py-12 text-white font-sans">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-black mb-10 font-serif tracking-wide">
+    <div className="py-8 md:py-12 px-4 md:px-8">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-2xl md:text-3xl font-black font-serif tracking-tight mb-8">
           {t("checkout.checkout")}
         </h1>
 
         {submitError && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-300 px-4 py-3 rounded-xl mb-8 text-sm text-center">
+          <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2" role="alert">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
             {submitError}
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-12 items-start">
-          {/* Left Column - Address & Payment */}
-          <div className="space-y-10">
-            {/* Address Form */}
-            <div className="bg-[#0b3b24]">
-              <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b border-white/10 pb-3 font-serif">
-                <MapPin className="w-5 h-5 text-[#ea580c]" />
+        <div className="grid md:grid-cols-5 gap-6 items-start">
+          <div className="md:col-span-3 space-y-6">
+            <div className="bg-surface-card border border-border-light rounded-2xl p-6 shadow-lg">
+              <h2 className="text-base font-bold mb-5 flex items-center gap-2 text-text-primary">
+                <MapPin className="w-4 h-4 text-brand-orange" />
                 {t("checkout.deliveryAddress")}
               </h2>
 
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-2">
-                    {`${t("common.fullName")} *`}
-                  </label>
-                  <div className="relative">
-                    <User
-                      className={`absolute ${currentLang === "ar" ? "right-4" : "left-4"} top-1/2 -translate-y-1/2 w-4 h-4 text-white/30`}
-                    />
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={address.fullName}
-                      onChange={handleInputChange}
-                      placeholder={t("checkout.namePlaceholder")}
-                      className={`w-full ${currentLang === "ar" ? "pr-11 pl-4" : "pl-11 pr-4"} py-3 bg-[#0b3b24] text-white border rounded-xl focus:outline-none focus:ring-1 focus:ring-[#ea580c] focus:border-[#ea580c] transition-all placeholder-white/20 ${
-                        formErrors.fullName
-                          ? "border-red-400"
-                          : "border-white/20"
-                      }`}
-                    />
-                  </div>
-                  {formErrors.fullName && (
-                    <p className="text-red-400 text-xs mt-1.5 font-medium">
-                      ⚠️ {formErrors.fullName}
-                    </p>
-                  )}
-                </div>
+              <div className="space-y-4">
+                <Input
+                  label={t("common.fullName")}
+                  placeholder={t("checkout.namePlaceholder")}
+                  value={address.fullName}
+                  onChange={handleInputChange}
+                  error={formErrors.fullName}
+                  icon={<User className="w-4 h-4" />}
+                  name="fullName"
+                />
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-2">
-                    {`${t("common.phoneNumber")} *`}
-                  </label>
-                  <div className="relative">
-                    <Phone
-                      className={`absolute ${currentLang === "ar" ? "right-4" : "left-4"} top-1/2 -translate-y-1/2 w-4 h-4 text-white/30`}
-                    />
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={address.phone}
-                      onChange={handleInputChange}
-                      placeholder={t("checkout.phonePlaceholder")}
-                      className={`w-full ${currentLang === "ar" ? "pr-11 pl-4" : "pl-11 pr-4"} py-3 bg-[#0b3b24] text-white border rounded-xl focus:outline-none focus:ring-1 focus:ring-[#ea580c] focus:border-[#ea580c] transition-all placeholder-white/20 ${
-                        formErrors.phone ? "border-red-400" : "border-white/20"
-                      }`}
-                    />
-                  </div>
-                  {formErrors.phone && (
-                    <p className="text-red-400 text-xs mt-1.5 font-medium">
-                      ⚠️ {formErrors.phone}
-                    </p>
-                  )}
-                </div>
+                <Input
+                  label={t("common.phoneNumber")}
+                  placeholder={t("checkout.phonePlaceholder")}
+                  value={address.phone}
+                  onChange={handleInputChange}
+                  error={formErrors.phone}
+                  icon={<Phone className="w-4 h-4" />}
+                  name="phone"
+                />
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-2">
-                      {`${t("common.city")} *`}
-                    </label>
-                    <div className="relative">
-                      <Building
-                        className={`absolute ${currentLang === "ar" ? "right-4" : "left-4"} top-1/2 -translate-y-1/2 w-4 h-4 text-white/30`}
-                      />
-                      <input
-                        type="text"
-                        name="city"
-                        value={address.city}
-                        onChange={handleInputChange}
-                        placeholder={t("checkout.cityPlaceholder")}
-                        className={`w-full ${currentLang === "ar" ? "pr-11 pl-4" : "pl-11 pr-4"} py-3 bg-[#0b3b24] text-white border rounded-xl focus:outline-none focus:ring-1 focus:ring-[#ea580c] focus:border-[#ea580c] transition-all placeholder-white/20 ${
-                          formErrors.city ? "border-red-400" : "border-white/20"
-                        }`}
-                      />
-                    </div>
-                    {formErrors.city && (
-                      <p className="text-red-400 text-xs mt-1.5 font-medium">
-                        ⚠️ {formErrors.city}
-                      </p>
-                    )}
-                  </div>
+                  <Input
+                    label={t("common.city")}
+                    placeholder={t("checkout.cityPlaceholder")}
+                    value={address.city}
+                    onChange={handleInputChange}
+                    error={formErrors.city}
+                    icon={<Building className="w-4 h-4" />}
+                    name="city"
+                  />
 
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-2">
-                      {`${t("common.street")} *`}
-                    </label>
-                    <div className="relative">
-                      <MapPin
-                        className={`absolute ${currentLang === "ar" ? "right-4" : "left-4"} top-1/2 -translate-y-1/2 w-4 h-4 text-white/30`}
-                      />
-                      <input
-                        type="text"
-                        name="street"
-                        value={address.street}
-                        onChange={handleInputChange}
-                        placeholder={t("checkout.streetPlaceholder")}
-                        className={`w-full ${currentLang === "ar" ? "pr-11 pl-4" : "pl-11 pr-4"} py-3 bg-[#0b3b24] text-white border rounded-xl focus:outline-none focus:ring-1 focus:ring-[#ea580c] focus:border-[#ea580c] transition-all placeholder-white/20 ${
-                          formErrors.street
-                            ? "border-red-400"
-                            : "border-white/20"
-                        }`}
-                      />
-                    </div>
-                    {formErrors.street && (
-                      <p className="text-red-400 text-xs mt-1.5 font-medium">
-                        ⚠️ {formErrors.street}
-                      </p>
-                    )}
-                  </div>
+                  <Input
+                    label={t("common.street")}
+                    placeholder={t("checkout.streetPlaceholder")}
+                    value={address.street}
+                    onChange={handleInputChange}
+                    error={formErrors.street}
+                    icon={<MapPin className="w-4 h-4" />}
+                    name="street"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-2">
+                  <label className="block mb-2 text-sm font-semibold tracking-wide text-text-secondary">
                     {t("common.notesOptional")}
                   </label>
                   <div className="relative">
-                    <FileText
-                      className={`absolute ${currentLang === "ar" ? "right-4" : "left-4"} top-4 w-4 h-4 text-white/30`}
-                    />
+                    <FileText className="absolute start-3.5 top-3.5 w-4 h-4 text-text-tertiary" />
                     <textarea
                       name="notes"
                       value={address.notes}
                       onChange={handleInputChange}
                       rows={3}
                       placeholder={t("checkout.specialInstructions")}
-                      className={`w-full ${currentLang === "ar" ? "pr-11 pl-4" : "pl-11 pr-4"} py-3 bg-[#0b3b24] text-white border border-white/20 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#ea580c] focus:border-[#ea580c] transition-all placeholder-white/20 resize-none`}
+                      className="w-full ps-10 pe-4 py-3 bg-surface-card text-text-primary border border-border-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all placeholder:text-text-tertiary/60 text-sm font-medium resize-none"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Payment Method */}
-            <div className="bg-[#0b3b24]">
-              <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b border-white/10 pb-3 font-serif">
-                <CreditCard className="w-5 h-5 text-[#ea580c]" />
+            <div className="bg-surface-card border border-border-light rounded-2xl p-6 shadow-lg">
+              <h2 className="text-base font-bold mb-5 flex items-center gap-2 text-text-primary">
+                <CreditCard className="w-4 h-4 text-brand-orange" />
                 {t("checkout.paymentMethod")}
               </h2>
 
-              <div>
-                <label
-                  className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-all ${
-                    paymentMethod === "COD"
-                      ? "border-[#ea580c] bg-white/5"
-                      : "border-white/10 hover:border-white/20"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="COD"
-                    checked={paymentMethod === "COD"}
-                    onChange={() => setPaymentMethod("COD")}
-                    className="w-4 h-4 accent-[#ea580c]"
-                  />
-                  <Banknote className="w-6 h-6 text-gray-300" />
-                  <div>
-                    <span className="font-bold block text-sm">
-                      {t("checkout.cashOnDelivery")}
-                    </span>
-                    <span className="text-xs text-gray-400 block mt-0.5">
-                      {t("checkout.payWhenReceive")}
-                    </span>
-                  </div>
-                </label>
-              </div>
+              <label
+                className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all border ${
+                  paymentMethod === "COD"
+                    ? "bg-brand-orange/5 border-brand-orange/30"
+                    : "bg-white/[0.02] border-border-light hover:border-border-medium"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="COD"
+                  checked={paymentMethod === "COD"}
+                  onChange={() => setPaymentMethod("COD")}
+                  className="w-4 h-4 accent-brand-orange"
+                />
+                <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center">
+                  <Banknote className="w-5 h-5 text-brand-orange" />
+                </div>
+                <div>
+                  <span className="font-bold block text-sm text-text-primary">
+                    {t("checkout.cashOnDelivery")}
+                  </span>
+                  <span className="text-xs text-text-tertiary block mt-0.5">
+                    {t("checkout.payWhenReceive")}
+                  </span>
+                </div>
+              </label>
             </div>
           </div>
 
-          {/* Right Column - Order Summary */}
-          <div className="md:sticky md:top-8">
-            <div className="bg-[#0b3b24] border border-white/10 p-6 rounded-2xl">
-              <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b border-white/10 pb-3 font-serif">
-                <ShoppingBag className="w-5 h-5 text-[#ea580c]" />
+          <div className="md:col-span-2 md:sticky md:top-24">
+            <div className="bg-surface-card border border-border-light rounded-2xl p-6 shadow-lg">
+              <h2 className="text-base font-bold mb-5 flex items-center gap-2 text-text-primary">
+                <ShoppingBag className="w-4 h-4 text-brand-orange" />
                 {t("checkout.orderSummary")}
               </h2>
 
-              <div className="divide-y divide-white/10 mb-6 max-h-[300px] overflow-y-auto custom-scrollbar">
+              <div className="divide-y divide-border-light mb-5 max-h-[280px] overflow-y-auto scrollbar-thin">
                 {cartItems.map((item: CartItem) => (
                   <div
                     key={item.product._id}
-                    className="py-4 flex gap-4 first:pt-0"
+                    className="py-3 flex gap-3 first:pt-0"
                   >
                     <img
                       src={item.product.image || "/placeholder.png"}
                       alt={getLocalizedText(item.product.name)}
-                      className="w-14 h-14 object-cover rounded-xl bg-[#0b3b24] border border-white/10 flex-shrink-0"
+                      className="w-12 h-12 object-cover rounded-xl bg-surface-overlay border border-border-light flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-sm truncate">
+                      <h3 className="font-bold text-sm text-text-primary truncate">
                         {getLocalizedText(item.product.name)}
                       </h3>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {`${t("orderTracking.qty")} ${item.quantity}`}
+                      <p className="text-xs text-text-tertiary mt-0.5">
+                        {t("orderTracking.qty")} {item.quantity}
                       </p>
-                      <p className="text-sm font-black font-mono mt-1 text-gray-200">
+                      <p className="text-sm font-black font-mono mt-1 text-text-primary">
                         ${(item.product.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
@@ -477,47 +382,36 @@ function Checkout() {
                 ))}
               </div>
 
-              <div className="border-t border-white/10 pt-4 space-y-3 text-sm">
+              <div className="border-t border-border-light pt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">
-                    {t("checkout.subtotal")}
-                  </span>
-                  <span className="font-bold font-mono">
+                  <span className="text-text-secondary">{t("checkout.subtotal")}</span>
+                  <span className="font-bold font-mono text-text-primary">
                     ${computedTotal.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">
-                    {t("checkout.shipping")}
-                  </span>
-                  <span className="font-bold text-green-400">
-                    {t("checkout.free")}
-                  </span>
+                  <span className="text-text-secondary">{t("checkout.shipping")}</span>
+                  <span className="font-bold text-success">{t("checkout.free")}</span>
                 </div>
-                <div className="flex justify-between items-center pt-4 border-t border-white/10">
-                  <span className="text-base font-bold font-serif">
+                <div className="flex justify-between items-center pt-3 border-t border-border-light">
+                  <span className="text-base font-bold font-serif text-text-primary">
                     {t("checkout.grandTotal")}
                   </span>
-                  <span className="text-2xl font-black font-mono text-[#ea580c]">
+                  <span className="text-xl md:text-2xl font-black font-mono text-brand-orange">
                     ${computedTotal.toFixed(2)}
                   </span>
                 </div>
               </div>
 
-              <button
+              <Button
                 onClick={handlePlaceOrder}
-                disabled={submitting}
-                className="w-full mt-8 bg-[#ea580c] text-white py-3.5 rounded-full font-bold tracking-wide hover:bg-[#d94e06] disabled:opacity-40 transition-all flex items-center justify-center gap-2 text-base shadow-sm"
+                fullWidth
+                size="lg"
+                loading={submitting}
+                className="mt-6"
               >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    {t("checkout.placingOrder")}
-                  </>
-                ) : (
-                  t("checkout.placeOrder")
-                )}
-              </button>
+                {submitting ? t("checkout.placingOrder") : t("checkout.placeOrder")}
+              </Button>
             </div>
           </div>
         </div>

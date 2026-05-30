@@ -1,107 +1,3 @@
-// import { useState } from 'react';
-// import { Link, useLocation, Outlet } from 'react-router-dom';
-// import { useSelector } from 'react-redux';
-// import type { RootState } from '../redux/store';
-
-// const menuItems = [
-//   { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
-//   { path: '/admin/products', label: 'Products', icon: '🍕' },
-//   { path: '/admin/orders', label: 'Orders', icon: '📦' },
-// ];
-
-// function AdminLayout() {
-//   const [sidebarOpen, setSidebarOpen] = useState(false);
-//   const location = useLocation();
-//   const user = useSelector((state: RootState) => state.auth.user);
-
-//   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
-
-//   return (
-//     <div className="flex min-h-screen bg-gray-100">
-//       {/* Mobile overlay */}
-//       {sidebarOpen && (
-//         <div
-//           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-//           onClick={() => setSidebarOpen(false)}
-//         />
-//       )}
-
-//       {/* Sidebar */}
-//       <aside
-//         className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white transform transition-transform duration-300 lg:transform-none ${
-//           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-//         }`}
-//       >
-//         <div className="flex flex-col h-full">
-//           <div className="p-4 border-b border-gray-700">
-//             <div className="flex items-center justify-between">
-//               <h2 className="text-xl font-bold">Admin Panel</h2>
-//               <button
-//                 onClick={() => setSidebarOpen(false)}
-//                 className="lg:hidden p-2 hover:bg-gray-700 rounded"
-//               >
-//                 ✕
-//               </button>
-//             </div>
-//             {user && (
-//               <p className="text-sm text-gray-400 mt-1">Welcome, {user.name}</p>
-//             )}
-//           </div>
-
-//           <nav className="flex-1 p-4 space-y-2">
-//             {menuItems.map((item) => (
-//               <Link
-//                 key={item.path}
-//                 to={item.path}
-//                 onClick={() => setSidebarOpen(false)}
-//                 className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-//                   isActive(item.path)
-//                     ? 'bg-indigo-600 text-white'
-//                     : 'hover:bg-gray-700 text-gray-300'
-//                 }`}
-//               >
-//                 <span className="text-xl">{item.icon}</span>
-//                 <span className="font-medium">{item.label}</span>
-//               </Link>
-//             ))}
-//           </nav>
-
-//           <div className="p-4 border-t border-gray-700">
-//             <Link
-//               to="/"
-//               className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 text-gray-300 transition-colors"
-//             >
-//               <span className="text-xl">🏠</span>
-//               <span className="font-medium">Back to Store</span>
-//             </Link>
-//           </div>
-//         </div>
-//       </aside>
-
-//       {/* Main content */}
-//       <div className="flex-1 flex flex-col min-w-0">
-//         {/* Mobile header */}
-//         <header className="lg:hidden bg-white shadow-sm p-4 flex items-center gap-4">
-//           <button
-//             onClick={() => setSidebarOpen(true)}
-//             className="p-2 hover:bg-gray-100 rounded-lg"
-//           >
-//             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-//             </svg>
-//           </button>
-//           <h1 className="font-semibold text-gray-900">Admin Panel</h1>
-//         </header>
-
-//         <main className="flex-1 p-4 lg:p-6 overflow-auto">
-//           <Outlet />
-//         </main>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default AdminLayout;
 import { useState } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -115,6 +11,7 @@ import {
   Menu,
   X,
   User,
+  ChevronLeft,
 } from "lucide-react";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 
@@ -141,15 +38,20 @@ function AdminLayout() {
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
 
+  const getPageTitle = () => {
+    const active = menuItems.find((item) => isActive(item.path));
+    return active ? t(active.labelKey) : t("admin.adminPanel");
+  };
+
   return (
     <div
-      className={`flex min-h-screen bg-[#0b3b24] text-white font-sans ${
+      className={`flex min-h-screen bg-surface-primary text-text-primary ${
         currentLang === "ar" ? "rtl" : "ltr"
       }`}
     >
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -157,7 +59,7 @@ function AdminLayout() {
       <aside
         className={`fixed lg:static inset-y-0 ${
           currentLang === "ar" ? "right-0" : "left-0"
-        } z-50 w-64 border-r border-white/10 bg-[#0b3b24] transform transition-transform duration-300 lg:transform-none ${
+        } z-50 w-64 border-r border-border-light bg-surface-overlay/80 backdrop-blur-xl transform transition-transform duration-300 lg:transform-none ${
           sidebarOpen
             ? "translate-x-0"
             : currentLang === "ar"
@@ -166,30 +68,32 @@ function AdminLayout() {
         }`}
       >
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-white/10">
+          <div className="p-5 border-b border-border-light">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-black font-serif tracking-wide text-white">
-                {t("admin.adminPanel")}
+              <h2 className="text-base font-black font-serif tracking-wide">
+                <span className="text-gradient-orange">{t("admin.adminPanel")}</span>
               </h2>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="lg:hidden p-1.5 rounded-full border border-white/10 hover:bg-white/5"
+                className="lg:hidden p-1.5 rounded-xl border border-border-medium hover:bg-white/5 transition-all"
               >
-                <X className="w-4 h-4 text-gray-400" />
+                <X className="w-4 h-4 text-text-secondary" />
               </button>
             </div>
 
             {user && (
-              <div className="flex items-center gap-2 mt-4 text-xs text-gray-400 bg-white/5 p-2.5 rounded-xl border border-white/5">
-                <User className="w-3.5 h-3.5 text-[#ea580c]" />
-                <span className="truncate">
+              <div className="flex items-center gap-2.5 mt-4 text-xs text-text-secondary bg-white/[0.03] p-2.5 rounded-xl border border-border-light">
+                <div className="w-6 h-6 rounded-lg bg-brand-orange/10 flex items-center justify-center">
+                  <User className="w-3.5 h-3.5 text-brand-orange" />
+                </div>
+                <span className="truncate font-medium">
                   {t("admin.welcome")}, {user.name}
                 </span>
               </div>
             )}
           </div>
 
-          <nav className="flex-1 p-4 space-y-1.5 mt-2">
+          <nav className="flex-1 p-3 space-y-1 mt-1">
             {menuItems.map((item) => {
               const IconComponent = item.icon;
               const active = isActive(item.path);
@@ -198,25 +102,23 @@ function AdminLayout() {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-bold tracking-wide transition-all ${
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold tracking-wide transition-all ${
                     active
-                      ? "bg-[#ea580c] text-white shadow-sm"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                      ? "bg-gradient-orange text-white shadow-md shadow-orange-900/30"
+                      : "text-text-secondary hover:text-text-primary hover:bg-white/5"
                   }`}
                 >
-                  <IconComponent
-                    className={`w-[18px] h-[18px] ${active ? "text-white" : "text-gray-400"}`}
-                  />
+                  <IconComponent className={`w-[18px] h-[18px]`} />
                   <span>{t(item.labelKey)}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="p-4 border-t border-white/10">
+          <div className="p-3 border-t border-border-light mt-auto">
             <Link
               to="/"
-              className="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all"
             >
               <Store className="w-[18px] h-[18px]" />
               <span>{t("common.backToStore")}</span>
@@ -226,31 +128,34 @@ function AdminLayout() {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="lg:hidden border-b border-white/10 bg-[#0b3b24] px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 border border-white/10 rounded-xl hover:bg-white/5"
-            >
-              <Menu className="w-5 h-5 text-white" />
-            </button>
-            <h1 className="font-serif font-black text-lg tracking-wide">
-              {t("admin.adminPanel")}
-            </h1>
-          </div>
+        <header className="sticky top-0 z-30 lg:static border-b border-border-light bg-surface-primary/80 backdrop-blur-xl">
+          <div className="flex items-center justify-between px-4 md:px-6 h-16">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 rounded-xl border border-border-medium hover:bg-white/5 transition-all"
+              >
+                <Menu className="w-5 h-5 text-text-secondary" />
+              </button>
+              <h1 className="text-lg font-black font-serif tracking-wide hidden sm:block">
+                {getPageTitle()}
+              </h1>
+            </div>
 
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <button
-              onClick={() => navigate("/")}
-              className="p-2 border border-white/10 rounded-xl hover:bg-white/5"
-            >
-              <Store className="w-4 h-4 text-gray-300" />
-            </button>
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              <button
+                onClick={() => navigate("/")}
+                className="p-2 rounded-xl border border-border-medium hover:bg-white/5 transition-all"
+                title={t("common.backToStore")}
+              >
+                <Store className="w-4 h-4 text-text-secondary" />
+              </button>
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 p-6 lg:p-8 overflow-auto bg-[#0b3b24]">
+        <main className="flex-1 p-4 md:p-8 overflow-auto bg-gradient-dark">
           <Outlet />
         </main>
       </div>

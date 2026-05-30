@@ -9,6 +9,7 @@ import {
 } from "../redux/slices/cartSlice";
 import type { AppDispatch } from "../redux/store";
 import { useState } from "react";
+import { ShoppingCart, Check } from "lucide-react";
 
 interface ProductCardProps {
   id: string;
@@ -26,27 +27,7 @@ export default function ProductCard({
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const [isAdding, setIsAdding] = useState(false);
-
-  // const handleAddToCart = async () => {
-  //   const product = {
-  //     _id: id,
-  //     name: { en: name, ar: name },
-  //     price,
-  //     image,
-  //   };
-
-  //   dispatch(optimisticAddItem({ productId: id, product }));
-
-  //   try {
-  //     dispatch(setLoading(true));
-  //     dispatch(setError(null));
-  //     await cartService.addToCart(id, 1);
-  //   } catch {
-  //     dispatch(setError(t("cart.addItemError")));
-  //   } finally {
-  //     dispatch(setLoading(false));
-  //   }
-  // };
+  const [justAdded, setJustAdded] = useState(false);
 
   const handleAddToCart = async () => {
     if (isAdding) return;
@@ -60,21 +41,19 @@ export default function ProductCard({
 
     try {
       setIsAdding(true);
-
       dispatch(setLoading(true));
       dispatch(setError(null));
-
       dispatch(
         optimisticAddItem({
           productId: id,
           product,
         }),
       );
-
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 1500);
       await cartService.addToCart(id, 1);
     } catch {
       dispatch(setError(t("cart.addItemError")));
-
       dispatch(optimisticRemoveItem(id));
     } finally {
       setIsAdding(false);
@@ -83,42 +62,51 @@ export default function ProductCard({
   };
 
   return (
-    <div className="bg-[#0c4228]/60 border border-[#1a5f3e]/40 rounded-2xl p-4 flex flex-col justify-between hover:scale-[1.02] transition-all duration-300 group">
-      <div className="relative rounded-xl overflow-hidden aspect-square mb-4 bg-[#0a3520]">
+    <div className="group bg-surface-card border border-border-light rounded-2xl overflow-hidden hover:border-border-medium hover:shadow-lg hover:shadow-black/20 transition-all duration-300 animate-fade-in flex flex-col">
+      <div className="relative overflow-hidden aspect-[4/3] bg-surface-overlay">
         <img
           src={image || "/placeholder.png"}
           alt={name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+          loading="lazy"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface-primary/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
-      <div className="flex flex-col flex-grow justify-between">
-        <div className="flex justify-between items-start gap-2 mb-4">
-          <div>
-            <h3 className="text-base md:text-lg font-bold text-white tracking-wide line-clamp-1">
-              {name}
-            </h3>
-            <p className="text-lg font-extrabold text-white mt-1">${price}</p>
-          </div>
+      <div className="p-4 flex flex-col flex-1 gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-base font-bold text-text-primary leading-snug line-clamp-1 flex-1">
+            {name}
+          </h3>
+          <span className="text-lg font-black font-mono text-brand-orange flex-shrink-0 leading-none mt-0.5">
+            ${price}
+          </span>
         </div>
 
-        {/* <button
-          onClick={handleAddToCart}
-          className="w-full bg-white text-[#0b3b24] py-2.5 px-4 rounded-full font-bold text-xs md:text-sm hover:bg-yellow-100 active:scale-[0.98] transition-all duration-200 shadow-md flex justify-center items-center"
-        >
-          {t("checkout.orderNow")}
-        </button> */}
         <button
           onClick={handleAddToCart}
           disabled={isAdding}
-          className={`w-full py-2.5 px-4 rounded-full font-bold text-xs md:text-sm transition-all duration-200 shadow-md flex justify-center items-center
-  ${
-    isAdding
-      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-      : "bg-white text-[#0b3b24] hover:bg-yellow-100 active:scale-[0.98]"
-  }`}
+          className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+            justAdded
+              ? "bg-success/20 text-success border border-success/30"
+              : isAdding
+                ? "bg-white/5 text-text-secondary border border-border-medium cursor-not-allowed"
+                : "bg-white text-surface-primary hover:bg-brand-orange hover:text-white active:scale-[0.98] border border-transparent shadow-sm"
+          }`}
         >
-          {isAdding ? t("cart.adding") : t("checkout.orderNow")}
+          {justAdded ? (
+            <>
+              <Check className="w-4 h-4" />
+              {t("cart.added", "Added!")}
+            </>
+          ) : isAdding ? (
+            t("cart.adding")
+          ) : (
+            <>
+              <ShoppingCart className="w-4 h-4" />
+              {t("checkout.orderNow")}
+            </>
+          )}
         </button>
       </div>
     </div>

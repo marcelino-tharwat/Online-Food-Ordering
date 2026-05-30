@@ -10,6 +10,12 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+_bmad
+_bmad-output
+.agents
+.opencode
+design-artifacts
+docs
 *.local
 
 # Editor directories and files

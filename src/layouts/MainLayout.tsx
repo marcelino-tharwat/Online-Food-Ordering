@@ -1,43 +1,40 @@
-﻿// import { Outlet } from 'react-router-dom';
-// import Navbar from '../components/Navbar';
-
-// function MainLayout() {
-//   return (
-//     <div className="min-h-screen flex flex-col">
-//       <Navbar />
-//       <main className="flex-1">
-//         <Outlet />
-//       </main>
-//       <footer className="bg-gray-800 text-white text-center p-4">
-//         <p>© 2024 Electro Pi. All rights reserved.</p>
-//       </footer>
-//     </div>
-//   );
-// }
-
-// export default MainLayout;
-import { Outlet } from "react-router-dom";
+﻿import { Outlet, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../components/Navbar";
+import { Heart } from "lucide-react";
 
 function MainLayout() {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b3b24] font-sans antialiased selection:bg-[#ea580c] selection:text-white text-white">
+    <div className="min-h-screen flex flex-col bg-surface-primary selection:bg-brand-orange/30 selection:text-white">
       <Navbar />
 
       <main className="flex-1">
         <Outlet />
       </main>
 
-      <footer className="bg-[#0b3b24] text-gray-300 text-center py-10 px-4 border-t border-white/10">
-        <div className="container mx-auto max-w-7xl flex flex-col sm:flex-row justify-between items-center gap-4 text-sm font-medium">
-          <p className="tracking-wide opacity-90">{t("footer.tagline")}</p>
-          <p className="opacity-60 text-xs sm:text-sm font-mono">
-            &copy; {currentYear} {t("footer.rights")}
-          </p>
+      <footer className="border-t border-border-light bg-surface-overlay/50">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-text-secondary">
+              <span>
+                &copy; {currentYear} {t("navbar.brand")}
+              </span>
+              <span className="hidden sm:inline mx-2 text-border-medium">|</span>
+              <span className="hidden sm:inline">{t("footer.tagline")}</span>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-text-tertiary">
+              <Link to="/menu" className="hover:text-text-secondary transition-colors">
+                {t("navbar.menu")}
+              </Link>
+              <span className="w-1 h-1 rounded-full bg-border-medium" />
+              <span className="flex items-center gap-1">
+                {t("footer.rights")}
+              </span>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

@@ -9,7 +9,11 @@ import {
   ImagePlus,
   AlertTriangle,
   X,
+  Package,
+  Search,
 } from "lucide-react";
+import { Button } from "../../components/ui/Button";
+import { Modal } from "../../components/ui/Modal";
 
 interface ProductModalProps {
   product?: Product;
@@ -43,7 +47,6 @@ export function ProductModal({
         typeof product.category === "object" && product.category !== null
           ? (product.category as { _id: string })._id
           : product.category || "";
-
       setFormData({
         name: product.name || { en: "", ar: "" },
         price: product.price || 0,
@@ -58,7 +61,6 @@ export function ProductModal({
     setUploading(true);
     const uploadFormData = new FormData();
     uploadFormData.append("image", file);
-
     try {
       const response = await api.post("/admin/upload-image", uploadFormData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -76,9 +78,7 @@ export function ProductModal({
     e.preventDefault();
     if (!formData.category) {
       alert(
-        currentLang === "ar"
-          ? "برجاء اختيار القسم"
-          : "Please select a category",
+        currentLang === "ar" ? "برجاء اختيار القسم" : "Please select a category",
       );
       return;
     }
@@ -94,238 +94,183 @@ export function ProductModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-[#0b3b24] border border-white/10 rounded-2xl w-full max-w-md p-6 text-white max-h-[90vh] overflow-y-auto custom-scrollbar">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-serif font-black tracking-wide">
-            {product
-              ? currentLang === "ar"
-                ? "تعديل المنتج"
-                : "Edit Product"
-              : currentLang === "ar"
-                ? "إضافة منتج جديد"
-                : "Add Product"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 border border-white/10 rounded-full hover:bg-white/5"
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <label className="block text-xs font-bold text-text-tertiary mb-1.5 uppercase tracking-wide">
+          {currentLang === "ar" ? "الاسم (بالإنجليزي)" : "Name (English)"}
+        </label>
+        <input
+          type="text"
+          value={formData.name.en}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              name: { ...prev.name, en: e.target.value },
+            }))
+          }
+          className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all text-sm"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-text-tertiary mb-1.5 uppercase tracking-wide">
+          {currentLang === "ar" ? "الاسم (بالعربي)" : "Name (Arabic)"}
+        </label>
+        <input
+          type="text"
+          value={formData.name.ar}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              name: { ...prev.name, ar: e.target.value },
+            }))
+          }
+          className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all text-sm"
+          required
+          dir="rtl"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-text-tertiary mb-1.5 uppercase tracking-wide">
+          {currentLang === "ar" ? "السعر" : "Price"}
+        </label>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={formData.price || ""}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              price: parseFloat(e.target.value) || 0,
+            }))
+          }
+          className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl text-text-primary font-mono font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all text-sm"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-text-tertiary mb-1.5 uppercase tracking-wide">
+          {currentLang === "ar" ? "القسم" : "Category"}
+        </label>
+        {loadingCategories ? (
+          <div className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl flex items-center text-text-tertiary text-sm gap-2">
+            <Loader2 className="animate-spin w-4 h-4 text-brand-orange" />
+            <span>{currentLang === "ar" ? "جاري تحميل الأقسام..." : "Loading categories..."}</span>
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl text-text-tertiary text-sm">
+            {currentLang === "ar" ? "لا توجد أقسام متاحة" : "No categories available"}
+          </div>
+        ) : (
+          <select
+            value={formData.category}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, category: e.target.value }))
+            }
+            className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all text-sm appearance-none"
+            required
           >
-            <X className="w-4 h-4 text-gray-400" />
-          </button>
+            <option value="" className="bg-surface-modal text-text-tertiary">
+              {currentLang === "ar" ? "اختر القسم" : "Select a category"}
+            </option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat._id} className="bg-surface-modal text-text-primary">
+                {currentLang === "ar"
+                  ? cat.name?.ar || cat.name?.en
+                  : cat.name?.en || cat.name?.ar}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-text-tertiary mb-1.5 uppercase tracking-wide">
+          {currentLang === "ar" ? "صورة المنتج" : "Image"}
+        </label>
+        <div className="relative flex items-center justify-center w-full min-h-[100px] bg-surface-card border-2 border-dashed border-border-medium rounded-xl p-4 hover:border-brand-orange/30 hover:bg-brand-orange/5 transition-all cursor-pointer group">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleImageUpload(file);
+            }}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          />
+          <div className="text-center space-y-1 text-text-tertiary group-hover:text-text-secondary transition-colors flex flex-col items-center">
+            <ImagePlus className="w-6 h-6 mb-1 text-text-tertiary group-hover:text-brand-orange" />
+            <span className="text-xs font-medium">
+              {currentLang === "ar"
+                ? "اضغط لرفع صورة للمنتج"
+                : "Click to upload product image"}
+            </span>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name English */}
-          <div>
-            <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">
-              {currentLang === "ar" ? "الاسم (بالإنجليزي)" : "Name (English)"}
-            </label>
-            <input
-              type="text"
-              value={formData.name.en}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  name: { ...prev.name, en: e.target.value },
-                }))
-              }
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium focus:outline-none focus:border-[#ea580c] transition-colors"
-              required
+        {uploading && (
+          <div className="mt-2 text-xs text-text-tertiary flex items-center gap-1.5">
+            <Loader2 className="animate-spin w-3.5 h-3.5 text-brand-orange" />
+            <span>{currentLang === "ar" ? "جاري الرفع..." : "Uploading..."}</span>
+          </div>
+        )}
+
+        {formData.image && !uploading && (
+          <div className="mt-3 flex justify-center">
+            <img
+              src={formData.image}
+              alt="Product preview"
+              className="w-20 h-20 object-cover rounded-xl border border-border-light shadow-sm"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
             />
           </div>
-
-          {/* Name Arabic */}
-          <div>
-            <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">
-              {currentLang === "ar" ? "الاسم (بالعربي)" : "Name (Arabic)"}
-            </label>
-            <input
-              type="text"
-              value={formData.name.ar}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  name: { ...prev.name, ar: e.target.value },
-                }))
-              }
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium focus:outline-none focus:border-[#ea580c] transition-colors"
-              required
-              dir="rtl"
-            />
-          </div>
-
-          {/* Price */}
-          <div>
-            <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">
-              {currentLang === "ar" ? "السعر" : "Price"}
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.price || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  price: parseFloat(e.target.value) || 0,
-                }))
-              }
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-[#ea580c] transition-colors"
-              required
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">
-              {currentLang === "ar" ? "القسم" : "Category"}
-            </label>
-            {loadingCategories ? (
-              <div className="w-full p-3 bg-white/5 border border-white/10 rounded-xl flex items-center text-gray-400 text-sm">
-                <Loader2 className="animate-spin w-4 h-4 mr-2 text-[#ea580c]" />
-                <span>
-                  {currentLang === "ar"
-                    ? "جاري تحميل الأقسام..."
-                    : "Loading categories..."}
-                </span>
-              </div>
-            ) : categories.length === 0 ? (
-              <div className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 text-sm">
-                {currentLang === "ar"
-                  ? "لا توجد أقسام متاحة"
-                  : "No categories available"}
-              </div>
-            ) : (
-              <select
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, category: e.target.value }))
-                }
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium focus:outline-none focus:border-[#ea580c] transition-colors appearance-none"
-                required
-              >
-                <option value="" className="bg-[#0b3b24] text-gray-400">
-                  {currentLang === "ar" ? "اختر القسم" : "Select a category"}
-                </option>
-                {categories.map((cat) => (
-                  <option
-                    key={cat._id}
-                    value={cat._id}
-                    className="bg-[#0b3b24] text-white"
-                  >
-                    {currentLang === "ar"
-                      ? cat.name?.ar || cat.name?.en
-                      : cat.name?.en || cat.name?.ar}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          {/* Image Upload */}
-          <div>
-            <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">
-              {currentLang === "ar" ? "صورة المنتج" : "Image"}
-            </label>
-            <div className="relative flex items-center justify-center w-full min-h-[100px] bg-white/5 border border-dashed border-white/20 rounded-xl p-4 hover:bg-white/10 transition-colors group cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleImageUpload(file);
-                }}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              />
-              <div className="text-center space-y-1 text-gray-400 group-hover:text-white transition-colors flex flex-col items-center">
-                <ImagePlus className="w-5 h-5 mb-1 text-gray-400 group-hover:text-[#ea580c]" />
-                <span className="text-xs font-medium">
-                  {currentLang === "ar"
-                    ? "اضغط لرفع صورة للمنتج"
-                    : "Click to upload product image"}
-                </span>
-              </div>
-            </div>
-
-            {uploading && (
-              <div className="mt-2 text-xs text-gray-400 flex items-center gap-1.5">
-                <Loader2 className="animate-spin w-3.5 h-3.5 text-[#ea580c]" />
-                <span>
-                  {currentLang === "ar" ? "جاري الرفع..." : "Uploading..."}
-                </span>
-              </div>
-            )}
-
-            {formData.image && !uploading && (
-              <div className="mt-3 flex justify-center">
-                <img
-                  src={formData.image}
-                  alt="Product preview"
-                  className="w-24 h-24 object-cover rounded-xl border border-white/10 shadow-sm"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Availability */}
-          <div className="flex items-center gap-2.5 pt-2">
-            <input
-              type="checkbox"
-              id="available"
-              checked={formData.available}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  available: e.target.checked,
-                }))
-              }
-              className="w-4 h-4 bg-white/5 border border-white/10 rounded focus:ring-0 text-[#ea580c] accent-[#ea580c]"
-            />
-            <label
-              htmlFor="available"
-              className="text-sm font-bold text-gray-300 select-none cursor-pointer"
-            >
-              {currentLang === "ar" ? "متاح للطلب" : "Available"}
-            </label>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-white/10 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-3 border border-white/10 text-gray-300 font-bold rounded-xl text-sm hover:bg-white/5 transition-all"
-            >
-              {currentLang === "ar" ? "إلغاء" : "Cancel"}
-            </button>
-            <button
-              type="submit"
-              disabled={saving || !formData.category}
-              className={`flex-1 px-4 py-3 text-white font-bold rounded-xl text-sm transition-all ${
-                saving || !formData.category
-                  ? "bg-white/10 text-gray-500 cursor-not-allowed"
-                  : "bg-[#ea580c] hover:bg-[#f97316]"
-              }`}
-            >
-              {saving
-                ? currentLang === "ar"
-                  ? "جاري الحفظ..."
-                  : "Saving..."
-                : product
-                  ? currentLang === "ar"
-                    ? "تحديث"
-                    : "Update"
-                  : currentLang === "ar"
-                    ? "إضافة"
-                    : "Add Product"}
-            </button>
-          </div>
-        </form>
+        )}
       </div>
-    </div>
+
+      <div className="flex items-center gap-2.5 pt-1">
+        <input
+          type="checkbox"
+          id="available"
+          checked={formData.available}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, available: e.target.checked }))
+          }
+          className="w-4 h-4 rounded border-border-medium bg-surface-card text-brand-orange accent-brand-orange focus:ring-brand-orange/30"
+        />
+        <label
+          htmlFor="available"
+          className="text-sm font-bold text-text-secondary select-none cursor-pointer"
+        >
+          {currentLang === "ar" ? "متاح للطلب" : "Available"}
+        </label>
+      </div>
+
+      <div className="flex gap-3 pt-5 border-t border-border-light">
+        <Button type="button" variant="outline" size="md" onClick={onClose} className="flex-1">
+          {currentLang === "ar" ? "إلغاء" : "Cancel"}
+        </Button>
+        <Button
+          type="submit"
+          variant="primary"
+          size="md"
+          disabled={saving || !formData.category}
+          loading={saving}
+          className="flex-1"
+        >
+          {saving
+            ? currentLang === "ar" ? "جاري الحفظ..." : "Saving..."
+            : product
+              ? currentLang === "ar" ? "تحديث" : "Update"
+              : currentLang === "ar" ? "إضافة" : "Add Product"}
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -334,12 +279,11 @@ function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | undefined>(
-    undefined,
-  );
+  const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const currentLang = localStorage.getItem("lang") || "en";
 
   const fetchCategories = async () => {
@@ -406,9 +350,7 @@ function AdminProducts() {
       setDeleteConfirm(null);
       await fetchProducts();
     } catch {
-      alert(
-        currentLang === "ar" ? "فشل حذف المنتج" : "Failed to delete product",
-      );
+      alert(currentLang === "ar" ? "فشل حذف المنتج" : "Failed to delete product");
     }
   };
 
@@ -420,148 +362,153 @@ function AdminProducts() {
       });
       await fetchProducts();
     } catch {
-      alert(
-        currentLang === "ar"
-          ? "فشل تحديث حالة المنتج"
-          : "Failed to update product",
-      );
+      alert(currentLang === "ar" ? "فشل تحديث حالة المنتج" : "Failed to update product");
     }
   };
 
+  const filteredProducts = products.filter((p) =>
+    (p.name?.en || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.name?.ar || "").includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="space-y-8 font-sans text-white">
-      {/* Header section */}
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black font-serif tracking-wide">
-            {currentLang === "ar" ? "قائمة المنتجات" : "Products Management"}
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">
-            {currentLang === "ar"
-              ? "إضافة وتعديل وحذف أصناف قائمة الطعام"
-              : "Manage and control your digital restaurant menu items"}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-orange flex items-center justify-center shadow-lg shadow-orange-900/30">
+            <Package className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl md:text-2xl font-black font-serif tracking-tight text-text-primary">
+              {currentLang === "ar" ? "قائمة المنتجات" : "Products Management"}
+            </h1>
+            <p className="text-xs text-text-tertiary mt-0.5">
+              {currentLang === "ar"
+                ? "إضافة وتعديل وحذف أصناف قائمة الطعام"
+                : "Manage and control your digital restaurant menu items"}
+            </p>
+          </div>
         </div>
-        <button
+        <Button
           onClick={handleAdd}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-[#ea580c] hover:bg-[#f97316] text-white font-bold text-sm rounded-xl transition-all shadow-sm self-start sm:self-auto"
+          variant="primary"
+          size="md"
+          icon={<Plus className="w-4 h-4" />}
         >
-          <Plus className="w-4 h-4" />
           <span>{currentLang === "ar" ? "إضافة منتج" : "Add Product"}</span>
-        </button>
+        </Button>
       </div>
 
-      {/* States view */}
+      <div className="relative max-w-xs">
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+        <input
+          type="text"
+          placeholder={currentLang === "ar" ? "بحث..." : "Search products..."}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full ps-9 pe-3 py-2 bg-surface-card border border-border-medium rounded-xl text-text-primary text-sm placeholder:text-text-tertiary/60 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all"
+        />
+      </div>
+
       {loading ? (
         <div className="flex justify-center items-center py-24">
-          <Loader2 className="w-8 h-8 text-[#ea580c] animate-spin" />
+          <Loader2 className="w-8 h-8 text-brand-orange animate-spin" />
         </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-16 border border-white/10 rounded-2xl bg-white/5 text-gray-400 text-sm">
-          {currentLang === "ar"
-            ? "لم يتم العثور على أي منتجات"
-            : "No products found"}
+      ) : filteredProducts.length === 0 ? (
+        <div className="text-center py-16 border border-border-light rounded-2xl bg-surface-card">
+          <Package className="w-10 h-10 text-text-tertiary mx-auto mb-3" />
+          <p className="text-text-secondary text-sm font-medium">
+            {currentLang === "ar" ? "لم يتم العثور على أي منتجات" : "No products found"}
+          </p>
         </div>
       ) : (
-        <div className="border border-white/10 rounded-2xl bg-[#0b3b24] overflow-hidden shadow-sm">
+        <div className="bg-surface-card border border-border-light rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/5 text-sm">
-              <thead className="bg-white/5 text-gray-400 font-bold uppercase tracking-wider text-xs">
+            <table className="min-w-full divide-y divide-border-light text-sm">
+              <thead className="bg-surface-overlay/50">
                 <tr>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    {currentLang === "ar" ? "الصورة" : "Image"}
-                  </th>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    {currentLang === "ar" ? "الاسم" : "Name"}
-                  </th>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    {currentLang === "ar" ? "السعر" : "Price"}
-                  </th>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    {currentLang === "ar" ? "الحالة" : "Status"}
-                  </th>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-left" : "text-right"}`}
-                  >
-                    {currentLang === "ar" ? "الخيارات" : "Actions"}
-                  </th>
+                  {["Image", "Name", "Price", "Status", "Actions"].map(
+                    (_, i) => (
+                      <th
+                        key={i}
+                        className={`px-5 py-3.5 text-xs font-bold text-text-tertiary uppercase tracking-wider ${
+                          i === 4 ? "text-end" : "text-start"
+                        }`}
+                      >
+                        {i === 0
+                          ? currentLang === "ar" ? "الصورة" : "Image"
+                          : i === 1
+                            ? currentLang === "ar" ? "الاسم" : "Name"
+                            : i === 2
+                              ? currentLang === "ar" ? "السعر" : "Price"
+                              : i === 3
+                                ? currentLang === "ar" ? "الحالة" : "Status"
+                                : currentLang === "ar" ? "الخيارات" : "Actions"}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
-                {products.map((product) => (
+              <tbody className="divide-y divide-border-light">
+                {filteredProducts.map((product) => (
                   <tr
                     key={product._id}
-                    className="hover:bg-white/5 transition-colors group"
+                    className="hover:bg-white/[0.02] transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex items-center justify-center relative">
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="w-11 h-11 bg-surface-overlay border border-border-light rounded-xl overflow-hidden flex items-center justify-center">
                         {product.image ? (
                           <img
                             src={product.image}
                             alt={product.name?.en || "Product"}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).style.display =
-                                "none";
+                              (e.target as HTMLImageElement).style.display = "none";
                             }}
                           />
                         ) : (
-                          <ImagePlus className="w-4 h-4 text-gray-500" />
+                          <ImagePlus className="w-4 h-4 text-text-tertiary" />
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-white">
-                      <div>{product.name?.en || "N/A"}</div>
-                      <div className="text-xs text-gray-400 mt-0.5" dir="rtl">
-                        {product.name?.ar || "N/A"}
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="font-semibold text-text-primary">{product.name?.en || "N/A"}</div>
+                      <div className="text-xs text-text-tertiary mt-0.5" dir="rtl">
+                        {product.name?.ar || ""}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-gray-200">
+                    <td className="px-5 py-4 whitespace-nowrap font-mono font-bold text-text-primary">
                       ${product.price?.toFixed(2) || "0.00"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleToggle(product)}
-                        className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${
+                        className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all border ${
                           product.available
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                            : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                            ? "bg-success/10 text-success border-success/20 hover:bg-success/15"
+                            : "bg-error/10 text-error border-error/20 hover:bg-error/15"
                         }`}
                       >
                         {product.available
-                          ? currentLang === "ar"
-                            ? "متاح"
-                            : "Available"
-                          : currentLang === "ar"
-                            ? "غير متاح"
-                            : "Unavailable"}
+                          ? currentLang === "ar" ? "متاح" : "Available"
+                          : currentLang === "ar" ? "غير متاح" : "Unavailable"}
                       </button>
                     </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm ${currentLang === "ar" ? "text-left" : "text-right"}`}
-                    >
-                      <div className="flex items-center gap-4 justify-end">
+                    <td className="px-5 py-4 whitespace-nowrap text-end">
+                      <div className="flex items-center gap-3 justify-end">
                         <button
                           onClick={() => handleEdit(product._id)}
-                          className="text-sky-400 hover:text-sky-300 transition-colors flex items-center gap-1.5 font-bold text-xs"
+                          className="text-info hover:text-info/80 transition-colors flex items-center gap-1.5 font-bold text-xs"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
-                          <span>{currentLang === "ar" ? "تعديل" : "Edit"}</span>
+                          <span className="hidden sm:inline">{currentLang === "ar" ? "تعديل" : "Edit"}</span>
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(product._id)}
-                          className="text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1.5 font-bold text-xs"
+                          className="text-error hover:text-error/80 transition-colors flex items-center gap-1.5 font-bold text-xs"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span>{currentLang === "ar" ? "حذف" : "Delete"}</span>
+                          <span className="hidden sm:inline">{currentLang === "ar" ? "حذف" : "Delete"}</span>
                         </button>
                       </div>
                     </td>
@@ -573,13 +520,19 @@ function AdminProducts() {
         </div>
       )}
 
-      {/* Modal Loading Wrapper */}
-      {modalOpen &&
-        (modalLoading ? (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-[#0b3b24] border border-white/10 rounded-2xl w-full max-w-md p-12 flex items-center justify-center shadow-lg">
-              <Loader2 className="animate-spin h-8 w-8 text-[#ea580c]" />
-            </div>
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={
+          editingProduct
+            ? currentLang === "ar" ? "تعديل المنتج" : "Edit Product"
+            : currentLang === "ar" ? "إضافة منتج جديد" : "Add Product"
+        }
+        maxWidth="max-w-lg"
+      >
+        {modalLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="animate-spin h-8 w-8 text-brand-orange" />
           </div>
         ) : (
           <ProductModal
@@ -589,40 +542,42 @@ function AdminProducts() {
             onClose={() => setModalOpen(false)}
             onSave={handleSave}
           />
-        ))}
+        )}
+      </Modal>
 
-      {/* Delete Confirmation Dialog */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-[#0b3b24] border border-white/10 rounded-2xl w-full max-w-sm p-6 text-white text-center shadow-lg">
-            <div className="w-12 h-12 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <h3 className="text-lg font-serif font-black mb-2 tracking-wide">
-              {currentLang === "ar" ? "تأكيد الحذف" : "Confirm Delete"}
-            </h3>
-            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
-              {currentLang === "ar"
-                ? "هل أنت متأكد من رغبتك في حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء لاحقًا."
-                : "Are you sure you want to delete this product? This action cannot be undone."}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2.5 border border-white/10 text-gray-300 font-bold rounded-xl text-sm hover:bg-white/5 transition-all"
-              >
-                {currentLang === "ar" ? "إلغاء" : "Cancel"}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                className="flex-1 px-4 py-2.5 bg-rose-600 text-white font-bold rounded-xl text-sm hover:bg-rose-700 transition-all shadow-sm"
-              >
-                {currentLang === "ar" ? "حذف نهائي" : "Delete"}
-              </button>
-            </div>
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        variant="confirmation"
+        maxWidth="max-w-sm"
+      >
+        <div className="text-center">
+          <div className="w-12 h-12 bg-error/10 border border-error/20 text-error rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <h3 className="text-lg font-serif font-black mb-2 tracking-wide text-text-primary">
+            {currentLang === "ar" ? "تأكيد الحذف" : "Confirm Delete"}
+          </h3>
+          <p className="text-xs text-text-secondary mb-6 leading-relaxed">
+            {currentLang === "ar"
+              ? "هل أنت متأكد من رغبتك في حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء لاحقًا."
+              : "Are you sure you want to delete this product? This action cannot be undone."}
+          </p>
+          <div className="flex gap-3">
+            <Button variant="outline" size="md" onClick={() => setDeleteConfirm(null)} className="flex-1">
+              {currentLang === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => handleDelete(deleteConfirm!)}
+              className="flex-1 !bg-error hover:!bg-error/90"
+            >
+              {currentLang === "ar" ? "حذف نهائي" : "Delete"}
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

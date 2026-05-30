@@ -1,31 +1,36 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axios";
 import type { Order, OrderStatus } from "../../types";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShoppingBag, Search } from "lucide-react";
+import { Button } from "../../components/ui/Button";
 
 const statusConfig: Record<
   OrderStatus,
-  { label: string; arLabel: string; color: string }
+  { label: string; arLabel: string; color: string; dot: string }
 > = {
   pending: {
     label: "Pending",
     arLabel: "قيد الانتظار",
-    color: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+    color: "bg-warning/10 text-warning border border-warning/20",
+    dot: "bg-warning",
   },
   confirmed: {
     label: "Confirmed",
     arLabel: "تم التأكيد",
-    color: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+    color: "bg-info/10 text-info border border-info/20",
+    dot: "bg-info",
   },
   delivered: {
     label: "Delivered",
     arLabel: "تم التوصيل",
-    color: "bg-green-500/10 text-green-400 border border-green-500/20",
+    color: "bg-success/10 text-success border border-success/20",
+    dot: "bg-success",
   },
   cancelled: {
     label: "Cancelled",
     arLabel: "ملغي",
-    color: "bg-red-500/10 text-red-400 border border-red-500/20",
+    color: "bg-error/10 text-error border border-error/20",
+    dot: "bg-error",
   },
 };
 
@@ -41,6 +46,7 @@ function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const currentLang = localStorage.getItem("lang") || "en";
 
   useEffect(() => {
@@ -62,10 +68,7 @@ function AdminOrders() {
     }
   };
 
-  const handleStatusChange = async (
-    orderId: string,
-    newStatus: OrderStatus,
-  ) => {
+  const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     try {
       await api.patch(`/orders/admin/${orderId}/status`, { status: newStatus });
       setOrders((prev) =>
@@ -75,9 +78,7 @@ function AdminOrders() {
       );
     } catch {
       alert(
-        currentLang === "ar"
-          ? "فشل تحديث حالة الطلب"
-          : "Failed to update order status",
+        currentLang === "ar" ? "فشل تحديث حالة الطلب" : "Failed to update order status",
       );
     }
   };
@@ -86,6 +87,14 @@ function AdminOrders() {
     statusFilter === "all"
       ? orders
       : orders.filter((order) => order.status === statusFilter);
+
+  const searchedOrders = filteredOrders.filter((o) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      o._id.toLowerCase().includes(q) ||
+      (o.fullName || "").toLowerCase().includes(q)
+    );
+  });
 
   const formatDate = (dateString: string) => {
     try {
@@ -104,170 +113,148 @@ function AdminOrders() {
     }
   };
 
-  // Safely get user display name - handles both object (populated) and string (unpopulated)
   const getUserDisplayName = (user: Order["user"]) => {
-    if (!user) {
-      return currentLang === "ar" ? "مستخدم غير معروف" : "Unknown User";
-    }
-    if (typeof user === "object" && "name" in user) {
-      return user.name;
-    }
+    if (!user) return currentLang === "ar" ? "مستخدم غير معروف" : "Unknown User";
+    if (typeof user === "object" && "name" in user) return user.name;
     return currentLang === "ar" ? "مستخدم غير معروف" : "Unknown User";
   };
 
-  // Safely get user email
-  // const getUserEmail = (user: Order["user"]) => {
-  //   if (!user) {
-  //     return "N/A";
-  //   }
-  //   if (typeof user === "object" && "email" in user) {
-  //     return user.email;
-  //   }
-  //   return "N/A";
-  // };
-
   return (
-    <div className="space-y-8 font-sans text-white">
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-black font-serif tracking-wide">
-          {currentLang === "ar" ? "إدارة الطلبات" : "Orders Management"}
-        </h1>
-        <p className="text-xs text-gray-400 mt-1">
-          {currentLang === "ar"
-            ? "متابعة وتحديث حالات طلبات العملاء الحالية"
-            : "Monitor and update real-time customer order statuses"}
-        </p>
-      </div>
-
-      {/* Status filter tabs */}
-      <div className="flex flex-wrap gap-2 pb-2 border-b border-white/5">
-        <button
-          onClick={() => setStatusFilter("all")}
-          className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
-            statusFilter === "all"
-              ? "bg-[#ea580c] text-white border-[#ea580c]"
-              : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white"
-          }`}
-        >
-          {currentLang === "ar" ? "الكل" : "All"}
-        </button>
-        {statusOptions.map((status) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
-            className={`px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
-              statusFilter === status
-                ? "bg-[#ea580c] text-white border-[#ea580c]"
-                : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white"
-            }`}
-          >
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-gradient-orange flex items-center justify-center shadow-lg shadow-orange-900/30">
+          <ShoppingBag className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h1 className="text-xl md:text-2xl font-black font-serif tracking-tight text-text-primary">
+            {currentLang === "ar" ? "إدارة الطلبات" : "Orders Management"}
+          </h1>
+          <p className="text-xs text-text-tertiary mt-0.5">
             {currentLang === "ar"
-              ? statusConfig[status].arLabel
-              : statusConfig[status].label}
-          </button>
-        ))}
+              ? "متابعة وتحديث حالات طلبات العملاء الحالية"
+              : "Monitor and update real-time customer order statuses"}
+          </p>
+        </div>
       </div>
 
-      {/* States Views */}
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+          <input
+            type="text"
+            placeholder={currentLang === "ar" ? "بحث..." : "Search orders..."}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full ps-9 pe-3 py-2 bg-surface-card border border-border-medium rounded-xl text-text-primary text-sm placeholder:text-text-tertiary/60 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all"
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {(["all", ...statusOptions] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
+                statusFilter === status
+                  ? "bg-brand-orange text-white border-brand-orange shadow-sm"
+                  : "bg-white/5 text-text-secondary border-border-light hover:text-text-primary hover:bg-white/10 hover:border-border-medium"
+              }`}
+            >
+              {status === "all"
+                ? currentLang === "ar" ? "الكل" : "All"
+                : currentLang === "ar"
+                  ? statusConfig[status].arLabel
+                  : statusConfig[status].label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {loading && (
         <div className="flex justify-center items-center py-24">
-          <Loader2 className="w-8 h-8 text-[#ea580c] animate-spin" />
+          <Loader2 className="w-8 h-8 text-brand-orange animate-spin" />
         </div>
       )}
 
       {error && (
-        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm font-medium">
+        <div className="bg-error/10 border border-error/20 text-error p-4 rounded-xl text-sm font-medium" role="alert">
           {error}
         </div>
       )}
 
-      {!loading && !error && filteredOrders.length === 0 && (
-        <div className="text-center py-16 border border-white/10 rounded-2xl bg-white/5 text-gray-400 text-sm">
-          {currentLang === "ar"
-            ? "لا توجد طلبات في هذا القسم حالياً"
-            : "No orders found."}
+      {!loading && !error && searchedOrders.length === 0 && (
+        <div className="text-center py-16 border border-border-light rounded-2xl bg-surface-card">
+          <ShoppingBag className="w-10 h-10 text-text-tertiary mx-auto mb-3" />
+          <p className="text-text-secondary text-sm font-medium">
+            {currentLang === "ar"
+              ? "لا توجد طلبات في هذا القسم حالياً"
+              : "No orders found."}
+          </p>
         </div>
       )}
 
-      {!loading && !error && filteredOrders.length > 0 && (
-        <div className="border border-white/10 rounded-2xl bg-[#0b3b24] overflow-hidden shadow-sm">
+      {!loading && !error && searchedOrders.length > 0 && (
+        <div className="bg-surface-card border border-border-light rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/5 text-sm">
-              <thead className="bg-white/5 text-gray-400 font-bold uppercase tracking-wider text-xs">
+            <table className="min-w-full divide-y divide-border-light text-sm">
+              <thead className="bg-surface-overlay/50">
                 <tr>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    {currentLang === "ar" ? "رقم الطلب" : "Order ID"}
-                  </th>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    {currentLang === "ar" ? "العميل" : "User"}
-                  </th>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    {currentLang === "ar" ? "الإجمالي" : "Total"}
-                  </th>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    {currentLang === "ar" ? "طريقة الدفع" : "Payment"}
-                  </th>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    {currentLang === "ar" ? "الحالة" : "Status"}
-                  </th>
-                  <th
-                    className={`px-6 py-4 ${currentLang === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    {currentLang === "ar" ? "التاريخ" : "Date"}
-                  </th>
+                  {["Order ID", "Customer", "Total", "Payment", "Status", "Date"].map(
+                    (_, i) => (
+                      <th
+                        key={i}
+                        className={`px-5 py-3.5 text-xs font-bold text-text-tertiary uppercase tracking-wider text-start`}
+                      >
+                        {i === 0
+                          ? currentLang === "ar" ? "رقم الطلب" : "Order ID"
+                          : i === 1
+                            ? currentLang === "ar" ? "العميل" : "Customer"
+                            : i === 2
+                              ? currentLang === "ar" ? "الإجمالي" : "Total"
+                              : i === 3
+                                ? currentLang === "ar" ? "طريقة الدفع" : "Payment"
+                                : i === 4
+                                  ? currentLang === "ar" ? "الحالة" : "Status"
+                                  : currentLang === "ar" ? "التاريخ" : "Date"}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
-                {filteredOrders.map((order) => (
+              <tbody className="divide-y divide-border-light">
+                {searchedOrders.map((order) => (
                   <tr
                     key={order._id}
-                    className="hover:bg-white/5 transition-colors group"
+                    className="hover:bg-white/[0.02] transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-white text-xs">
+                    <td className="px-5 py-4 whitespace-nowrap font-mono font-bold text-text-primary text-xs">
                       #{order._id.slice(-6).toUpperCase()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {/* <div className="font-bold text-white">
-                        {getUserDisplayName(order.fullName)}
-                      </div> */}
-                      <div className="text-gray-400 text-xs mt-0.5">
-                        {order.fullName}
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="text-text-primary text-sm font-medium">
+                        {order.fullName || getUserDisplayName(order.user)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-gray-200">
+                    <td className="px-5 py-4 whitespace-nowrap font-mono font-bold text-text-primary">
                       ${order.total?.toFixed(2) || "0.00"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-400 font-medium">
+                    <td className="px-5 py-4 whitespace-nowrap text-text-secondary font-medium text-xs">
                       {order.paymentMethod || "N/A"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-5 py-4 whitespace-nowrap">
                       <div className="relative inline-block">
                         <select
                           value={order.status}
                           onChange={(e) =>
-                            handleStatusChange(
-                              order._id,
-                              e.target.value as OrderStatus,
-                            )
+                            handleStatusChange(order._id, e.target.value as OrderStatus)
                           }
-                          className={`px-3 py-1.5 text-xs font-bold rounded-full cursor-pointer appearance-none focus:outline-none transition-all ${statusConfig[order.status].color}`}
+                          className={`px-3 py-1.5 text-[10px] font-bold rounded-lg cursor-pointer appearance-none focus:outline-none transition-all ${statusConfig[order.status].color}`}
                         >
                           {statusOptions.map((status) => (
                             <option
                               key={status}
                               value={status}
-                              className="bg-[#0b3b24] text-white"
+                              className="bg-surface-modal text-text-primary"
                             >
                               {currentLang === "ar"
                                 ? statusConfig[status].arLabel
@@ -277,7 +264,7 @@ function AdminOrders() {
                         </select>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-400 font-medium">
+                    <td className="px-5 py-4 whitespace-nowrap text-xs text-text-tertiary font-medium">
                       {formatDate(order.createdAt)}
                     </td>
                   </tr>
