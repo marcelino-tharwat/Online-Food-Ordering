@@ -28,17 +28,20 @@
     "backToOrders": "Back to My Orders"
   },
   "navbar": {
-    "brand": "Passion & Love",
+    "brand": "FreshBox",
     "menu": "Menu",
     "cart": "Cart",
     "orders": "Orders",
+    "favorites": "Favorites",
+    "profile": "Profile",
     "adminPanel": "Admin Panel",
     "logout": "Logout",
     "login": "Login",
-    "register": "Register"
+    "register": "Register",
+    "searchPlaceholder": "Search menu..."
   },
   "footer": {
-    "tagline": "🍕 Passion & Love — Crafted with Passion, Served with Love",
+    "tagline": "🥗 FreshBox — Fresh meals, delivered fast",
     "rights": "All rights reserved."
   },
   "languageSwitcher": {
@@ -47,9 +50,19 @@
     "arabic": "Arabic"
   },
   "home": {
+    "heroTitle": "Passionately Prepared, Lovingly Served",
+    "heroSubtitle": "Discover flavors that turn every meal into a celebration. Fresh ingredients, authentic recipes, delivered to your door.",
+    "heroCta": "Explore Our Menu",
+    "featuredTitle": "Trending Now",
+    "featuredSubtitle": "Our community's most loved dishes this week",
     "discoverMenu": "Discover Our Menu",
     "searchPlaceholder": "Search for your favorite meal...",
-    "noSearchResults": "No meals available matching your search"
+    "noSearchResults": "No meals available matching your search",
+    "sortBy": "Sort by",
+    "sortDefault": "Default",
+    "sortPriceLow": "Price: Low to High",
+    "sortPriceHigh": "Price: High to Low",
+    "sortName": "Name A-Z"
   },
   "auth": {
     "welcomeBack": "Welcome Back",
@@ -84,12 +97,16 @@
     "paymentMethod": "Payment Method",
     "cashOnDelivery": "Cash on Delivery",
     "payWhenReceive": "Pay when you receive your order",
+    "savedAddresses": "Saved Addresses",
+    "addNewAddress": "Add New Address",
+    "addressLabel": "Label (e.g. Home, Work)",
+    "useSelected": "Use This Address",
     "orderPlaced": "Order Placed Successfully!",
     "successMessage": "Your order has been placed and is being processed.",
-    "viewOrders": "View Your Orders 📦",
+    "viewOrders": "View Your Orders",
     "emptyCart": "Your Cart is Empty",
     "emptyMessage": "Add some items to your cart before checking out.",
-    "browseMenu": "Browse Menu 🍕",
+    "browseMenu": "Browse Menu",
     "orderSummary": "Order Summary",
     "subtotal": "Subtotal",
     "shipping": "Shipping",
@@ -117,13 +134,16 @@
     "loadingCart": "Loading your cart...",
     "clearCart": "Clear Cart",
     "proceedCheckout": "Proceed to Checkout",
+    "miniCartTitle": "Cart Summary",
+    "miniCartEmpty": "Your cart is empty",
     "removeItemError": "Failed to remove item",
     "updateQuantityError": "Failed to update quantity",
     "loadCartError": "Failed to load cart",
     "emptyCartError": "Failed to clear cart",
     "orderSummary": "Order Summary",
     "retry": "Try Again",
-    "adding": "Adding..."
+    "adding": "Adding...",
+    "subtotal": "Subtotal"
   },
   "orders": {
     "myOrders": "My Orders",
@@ -131,6 +151,11 @@
     "noOrders": "No Orders Yet",
     "emptyMessage": "You haven't placed any orders yet. How about exploring our menu?",
     "trackOrder": "Track Order",
+    "reorder": "Reorder",
+    "cancelOrder": "Cancel Order",
+    "cancelConfirm": "Are you sure you want to cancel this order?",
+    "cancelSuccess": "Order cancelled successfully",
+    "cancelFailed": "Failed to cancel order",
     "pending": "Pending",
     "confirmed": "Confirmed",
     "delivered": "Delivered",
@@ -160,7 +185,10 @@
     "backToOrders": "Back to My Orders",
     "loadingOrder": "Loading order details...",
     "errorLoadingOrder": "Error Loading Order",
-    "invalidOrder": "Order not found"
+    "invalidOrder": "Order not found",
+    "cancelOrder": "Cancel Order",
+    "etaLabel": "Estimated Arrival",
+    "etaCalculating": "Calculating..."
   },
   "admin": {
     "dashboardOverview": "Dashboard Overview",
@@ -235,6 +263,33 @@
     "failedUploadImage": "Failed to upload image",
     "failedSaveProduct": "Failed to save product",
     "failedDeleteProduct": "Failed to delete product"
+  },
+  "favorites": {
+    "myFavorites": "My Favorites",
+    "emptyTitle": "No Favorites Yet",
+    "emptyMessage": "Start adding items you love by tapping the heart icon on any product.",
+    "browseMenu": "Browse Menu",
+    "removeFromFavorites": "Remove from favorites",
+    "addToFavorites": "Add to favorites"
+  },
+  "profile": {
+    "myProfile": "My Profile",
+    "accountDetails": "Account Details",
+    "savedAddresses": "Saved Addresses",
+    "recentOrders": "Recent Orders",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "noSavedAddresses": "No saved addresses yet",
+    "noRecentOrders": "No recent orders"
+  },
+  "productDetail": {
+    "addToCart": "Add to Cart",
+    "adding": "Adding...",
+    "quantity": "Quantity",
+    "inStock": "In Stock",
+    "outOfStock": "Currently Unavailable",
+    "price": "Price"
   },
   "validation": {
     "emailRequired": "Email is required",

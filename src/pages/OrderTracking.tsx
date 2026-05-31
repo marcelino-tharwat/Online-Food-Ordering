@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import EtaDisplay from "../components/EtaDisplay";
 import {
   Loader2,
   Package,
@@ -14,6 +15,7 @@ import {
   Clock,
   XCircle,
   AlertCircle,
+  X,
 } from "lucide-react";
 
 interface LocalizedText {
@@ -69,28 +71,31 @@ function OrderTracking() {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cancelling, setCancelling] = useState(false);
   const currentLang = (i18n.language as "en" | "ar") || "en";
 
-  useEffect(() => {
-    const fetchOrder = async () => {
-      if (!id) {
-        setError(t("orderTracking.invalidOrder"));
-        setIsLoading(false);
-        return;
-      }
-      setIsLoading(true);
+  const fetchOrder = useCallback(async () => {
+    if (!id) {
+      setError(t("orderTracking.invalidOrder"));
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const response = await api.get<OrderResponse>(`/orders/${id}`);
+      setOrder(response.data.data);
       setError("");
-      try {
-        const response = await api.get<OrderResponse>(`/orders/${id}`);
-        setOrder(response.data.data);
-      } catch {
-        setError(t("orderTracking.errorLoadingOrder"));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchOrder();
+    } catch {
+      setError(t("orderTracking.errorLoadingOrder"));
+    } finally {
+      setIsLoading(false);
+    }
   }, [id, currentLang, t]);
+
+  useEffect(() => {
+    fetchOrder();
+    const interval = setInterval(fetchOrder, 15000);
+    return () => clearInterval(interval);
+  }, [fetchOrder]);
 
   const getLocalizedText = (obj: LocalizedText | undefined): string => {
     if (!obj) return "";
@@ -111,7 +116,6 @@ function OrderTracking() {
   ): "completed" | "active" | "pending" | "cancelled" => {
     if (isCancelledStatus(currentStatus)) {
       if (stepKey === "cancelled") return "cancelled";
-      if (stepKey === currentStatus) return "cancelled";
       if (getStatusIndex(stepKey) < getStatusIndex("pending")) return "completed";
       return "pending";
     }
@@ -138,14 +142,27 @@ function OrderTracking() {
     return `$${price?.toFixed(2) ?? "0.00"}`;
   };
 
+  const handleCancel = async () => {
+    if (!order || cancelling) return;
+    if (!window.confirm(t("orders.cancelConfirm"))) return;
+    setCancelling(true);
+    try {
+      await api.patch(`/orders/${order._id}/cancel`);
+      setOrder({ ...order, status: "cancelled" });
+      alert(t("orders.cancelSuccess"));
+    } catch {
+      alert(t("orders.cancelFailed"));
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-brand-orange animate-spin" />
-          <p className="text-text-secondary text-sm font-medium animate-pulse-soft">
-            {t("orderTracking.loadingOrder")}
-          </p>
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-text-secondary text-sm font-medium">{t("orderTracking.loadingOrder")}</p>
         </div>
       </div>
     );
@@ -158,7 +175,7 @@ function OrderTracking() {
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-error-bg border border-error-border flex items-center justify-center">
             <AlertCircle className="w-8 h-8 text-error" />
           </div>
-          <h2 className="text-xl font-black mb-3 font-serif">
+          <h2 className="text-xl font-bold mb-3 text-text-primary">
             {t("orderTracking.errorLoadingOrder")}
           </h2>
           <p className="text-text-secondary text-sm mb-8">
@@ -166,7 +183,7 @@ function OrderTracking() {
           </p>
           <button
             onClick={() => navigate("/orders")}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-border-medium text-text-secondary rounded-xl font-bold hover:text-text-primary hover:border-border-strong transition-all text-sm"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-border-medium text-text-secondary rounded-md font-semibold hover:text-primary hover:border-primary transition-all text-sm"
           >
             <ChevronLeft className={`w-4 h-4 ${currentLang === "ar" ? "rotate-180" : ""}`} />
             {t("orderTracking.backToOrders")}
@@ -177,22 +194,24 @@ function OrderTracking() {
   }
 
   return (
-    <div className="py-8 md:py-12 px-4 md:px-8">
+    <div className="py-8 md:py-12 px-4 md:px-8 bg-surface-mint min-h-screen">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate("/orders")}
-            className="p-2 rounded-xl border border-border-medium hover:bg-white/5 hover:border-border-strong transition-all"
+            className="p-2 rounded-md border border-border-light hover:bg-accent/50 hover:border-primary/30 transition-all"
           >
             <ChevronLeft className={`w-5 h-5 text-text-secondary ${currentLang === "ar" ? "rotate-180" : ""}`} />
           </button>
-          <h1 className="text-xl md:text-2xl font-black font-serif tracking-tight">
+          <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-text-primary">
             {t("orderTracking.orderTracking")}
           </h1>
         </div>
 
-        <div className="bg-surface-card border border-border-light rounded-2xl p-6 md:p-8 mb-6 shadow-lg">
-          <h2 className="text-sm font-bold text-text-secondary mb-8 tracking-wide">
+        <EtaDisplay createdAt={order.createdAt} status={order.status} />
+
+        <div className="bg-white border border-border-light rounded-2xl p-6 md:p-8 mb-6 shadow-sm mt-6">
+          <h2 className="text-sm font-semibold text-text-secondary mb-8 tracking-wide">
             {t("orderTracking.orderJourney")}
           </h2>
           <div className="relative">
@@ -205,25 +224,25 @@ function OrderTracking() {
                     <div className="flex flex-col items-center">
                       <div className="transition-all duration-300">
                         {status === "completed" ? (
-                          <div className="w-10 h-10 rounded-full bg-success/10 border border-success/20 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-success-bg border border-success/20 flex items-center justify-center">
                             <CheckCircle className="w-5 h-5 text-success" />
                           </div>
                         ) : status === "active" ? (
                           <div className="w-10 h-10 rounded-full bg-info/10 border border-info/20 flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-info animate-pulse" />
+                            <Clock className="w-5 h-5 text-info" />
                           </div>
                         ) : status === "cancelled" ? (
-                          <div className="w-10 h-10 rounded-full bg-error/10 border border-error/20 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-error-bg border border-error/20 flex items-center justify-center">
                             <XCircle className="w-5 h-5 text-error" />
                           </div>
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-white/[0.03] border border-border-light flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-accent/30 border border-border-light flex items-center justify-center">
                             <Circle className="w-5 h-5 text-text-tertiary/40" />
                           </div>
                         )}
                       </div>
                       <span
-                        className={`mt-3 text-xs font-bold tracking-wide transition-all ${
+                        className={`mt-3 text-xs font-semibold tracking-wide transition-all ${
                           status === "completed"
                             ? "text-success"
                             : status === "active"
@@ -239,9 +258,7 @@ function OrderTracking() {
                     {!isLast && (
                       <div
                         className={`flex-1 h-[2px] mx-4 rounded-full transition-colors ${
-                          status === "completed"
-                            ? "bg-success/40"
-                            : "bg-border-light"
+                          status === "completed" ? "bg-success/30" : "bg-border-light"
                         }`}
                       />
                     )}
@@ -259,7 +276,7 @@ function OrderTracking() {
                     <div className="flex flex-col items-center flex-shrink-0">
                       <div className="transition-all duration-300">
                         {status === "completed" ? (
-                          <div className="w-8 h-8 rounded-full bg-success/10 border border-success/20 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-success-bg border border-success/20 flex items-center justify-center">
                             <CheckCircle className="w-4 h-4 text-success" />
                           </div>
                         ) : status === "active" ? (
@@ -267,11 +284,11 @@ function OrderTracking() {
                             <Clock className="w-4 h-4 text-info" />
                           </div>
                         ) : status === "cancelled" ? (
-                          <div className="w-8 h-8 rounded-full bg-error/10 border border-error/20 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-error-bg border border-error/20 flex items-center justify-center">
                             <XCircle className="w-4 h-4 text-error" />
                           </div>
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-white/[0.03] border border-border-light flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-accent/30 border border-border-light flex items-center justify-center">
                             <Circle className="w-4 h-4 text-text-tertiary/40" />
                           </div>
                         )}
@@ -286,7 +303,7 @@ function OrderTracking() {
                     </div>
                     <div className="pt-1.5">
                       <span
-                        className={`text-sm font-bold tracking-wide ${
+                        className={`text-sm font-semibold tracking-wide ${
                           status === "completed"
                             ? "text-success"
                             : status === "active"
@@ -308,9 +325,9 @@ function OrderTracking() {
 
         <div className="grid md:grid-cols-5 gap-6 items-start">
           <div className="md:col-span-2 space-y-4">
-            <div className="bg-surface-card border border-border-light rounded-2xl p-5 shadow-sm">
-              <h2 className="text-sm font-bold text-text-secondary flex items-center gap-2 pb-3 border-b border-border-light mb-3">
-                <Package className="w-4 h-4 text-brand-orange" />
+            <div className="bg-white border border-border-light rounded-2xl p-5 shadow-sm">
+              <h2 className="text-sm font-semibold text-text-secondary flex items-center gap-2 pb-3 border-b border-border-light mb-3">
+                <Package className="w-4 h-4 text-primary" />
                 {t("orderTracking.orderSummary")}
               </h2>
               <div className="space-y-2.5 text-xs">
@@ -331,9 +348,9 @@ function OrderTracking() {
               </div>
             </div>
 
-            <div className="bg-surface-card border border-border-light rounded-2xl p-5 shadow-sm">
-              <h2 className="text-sm font-bold text-text-secondary flex items-center gap-2 pb-3 border-b border-border-light mb-3">
-                <User className="w-4 h-4 text-brand-orange" />
+            <div className="bg-white border border-border-light rounded-2xl p-5 shadow-sm">
+              <h2 className="text-sm font-semibold text-text-secondary flex items-center gap-2 pb-3 border-b border-border-light mb-3">
+                <User className="w-4 h-4 text-primary" />
                 {t("orderTracking.recipientInfo")}
               </h2>
               <div className="space-y-2.5 text-xs">
@@ -348,9 +365,9 @@ function OrderTracking() {
               </div>
             </div>
 
-            <div className="bg-surface-card border border-border-light rounded-2xl p-5 shadow-sm">
-              <h2 className="text-sm font-bold text-text-secondary flex items-center gap-2 pb-3 border-b border-border-light mb-3">
-                <MapPin className="w-4 h-4 text-brand-orange" />
+            <div className="bg-white border border-border-light rounded-2xl p-5 shadow-sm">
+              <h2 className="text-sm font-semibold text-text-secondary flex items-center gap-2 pb-3 border-b border-border-light mb-3">
+                <MapPin className="w-4 h-4 text-primary" />
                 {t("orderTracking.deliveryAddress")}
               </h2>
               <p className="text-xs text-text-secondary leading-relaxed">
@@ -359,50 +376,67 @@ function OrderTracking() {
             </div>
           </div>
 
-          <div className="md:col-span-3 bg-surface-card border border-border-light rounded-2xl p-5 shadow-sm">
-            <h2 className="text-sm font-bold text-text-secondary flex items-center gap-2 pb-4 border-b border-border-light mb-1">
-              <Package className="w-4 h-4 text-brand-orange" />
-              {t("orderTracking.itemsOrdered")}
-            </h2>
-            <div className="divide-y divide-border-light">
-              {order.items?.map((item, index) => (
-                <div
-                  key={`${item.product?._id || "prod"}-${index}`}
-                  className="py-3 flex gap-3 items-center"
-                >
-                  <img
-                    src={item.product?.image || "/placeholder.png"}
-                    alt={getLocalizedText(item.product?.name)}
-                    className="w-12 h-12 object-cover rounded-xl bg-surface-overlay border border-border-light flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0 space-y-0.5">
-                    <h3 className="text-sm font-bold text-text-primary truncate">
-                      {getLocalizedText(item.product?.name)}
-                    </h3>
-                    <p className="text-xs text-text-tertiary">
-                      {t("orderTracking.qty")}{" "}
-                      <span className="font-mono text-text-primary">{item.quantity || 0}</span>
-                    </p>
+          <div className="md:col-span-3">
+            <div className="bg-white border border-border-light rounded-2xl p-5 shadow-sm">
+              <h2 className="text-sm font-semibold text-text-secondary flex items-center gap-2 pb-4 border-b border-border-light mb-1">
+                <Package className="w-4 h-4 text-primary" />
+                {t("orderTracking.itemsOrdered")}
+              </h2>
+              <div className="divide-y divide-border-light">
+                {order.items?.map((item, index) => (
+                  <div
+                    key={`${item.product?._id || "prod"}-${index}`}
+                    className="py-3 flex gap-3 items-center"
+                  >
+                    <img
+                      src={item.product?.image || "/placeholder.png"}
+                      alt={getLocalizedText(item.product?.name)}
+                      className="w-12 h-12 object-cover rounded-xl bg-accent border border-border-light flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <h3 className="text-sm font-semibold text-text-primary truncate">
+                        {getLocalizedText(item.product?.name)}
+                      </h3>
+                      <p className="text-xs text-text-tertiary">
+                        {t("orderTracking.qty")}{" "}
+                        <span className="font-mono text-text-primary">{item.quantity || 0}</span>
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className="text-sm font-bold font-mono text-text-primary">
+                        {formatPrice(
+                          (item.price || item.product?.price || 0) * (item.quantity || 0),
+                        )}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <span className="text-sm font-bold font-mono text-text-primary">
-                      {formatPrice(
-                        (item.price || item.product?.price || 0) * (item.quantity || 0),
-                      )}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              <div className="border-t border-border-light pt-4 flex justify-between items-center">
+                <span className="text-sm font-semibold text-text-secondary">
+                  {t("orderTracking.grandTotal")}
+                </span>
+                <span className="text-lg md:text-xl font-bold font-mono text-primary">
+                  {formatPrice(order.total)}
+                </span>
+              </div>
             </div>
 
-            <div className="border-t border-border-light pt-4 flex justify-between items-center">
-              <span className="text-sm font-bold text-text-secondary">
-                {t("orderTracking.grandTotal")}
-              </span>
-              <span className="text-lg md:text-xl font-black font-mono text-brand-orange">
-                {formatPrice(order.total)}
-              </span>
-            </div>
+            {order.status === "pending" && (
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="mt-4 w-full flex items-center justify-center gap-2 px-5 py-3 border border-error/30 text-error rounded-md text-sm font-semibold hover:bg-error-bg disabled:opacity-50 transition-all"
+              >
+                {cancelling ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <X className="w-4 h-4" />
+                )}
+                {t("orderTracking.cancelOrder")}
+              </button>
+            )}
           </div>
         </div>
       </div>

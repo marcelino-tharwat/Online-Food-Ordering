@@ -84,7 +84,7 @@ function Modal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4 animate-fade-in"
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
@@ -94,29 +94,29 @@ function Modal({
         <div
           ref={modalRef}
           tabIndex={-1}
-          className="bg-surface-modal border border-border-medium rounded-2xl p-12 flex items-center justify-center shadow-xl animate-scale-in"
+          className="bg-white border border-border-light rounded-2xl p-12 flex items-center justify-center shadow-lg animate-scale-in"
           style={{ maxWidth }}
         >
-          <Loader2 className="h-8 w-8 text-brand-orange animate-spin" />
+          <Loader2 className="h-8 w-8 text-primary animate-spin" />
         </div>
       ) : (
         <div
           ref={modalRef}
           tabIndex={-1}
-          className="bg-surface-modal border border-border-medium rounded-2xl w-full shadow-xl max-h-[90vh] overflow-y-auto animate-scale-in outline-none scrollbar-thin"
+          className="bg-white border border-border-light rounded-2xl w-full shadow-lg max-h-[90vh] overflow-y-auto animate-scale-in outline-none"
           style={{ maxWidth }}
         >
           {title && (
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border-light">
               <h2
                 id="modal-title"
-                className="text-xl font-serif font-black tracking-wide text-text-primary"
+                className="text-lg font-bold text-text-primary"
               >
                 {title}
               </h2>
               <button
                 onClick={onClose}
-                className="p-1.5 border border-border-medium rounded-full hover:bg-white/5 hover:border-border-strong transition-all flex-shrink-0"
+                className="p-1.5 border border-border-light rounded-md hover:bg-accent/50 transition-all flex-shrink-0"
                 aria-label="Close"
               >
                 <X className="w-4 h-4 text-text-secondary" />

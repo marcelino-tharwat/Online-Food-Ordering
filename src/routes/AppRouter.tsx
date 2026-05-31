@@ -11,6 +11,8 @@ import Cart from "../pages/Cart";
 import Checkout from "../pages/Checkout";
 import Orders from "../pages/Orders";
 import OrderTracking from "../pages/OrderTracking";
+import Favorites from "../pages/Favorites";
+import Profile from "../pages/Profile";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminProducts from "../pages/admin/AdminProducts";
 import AdminOrders from "../pages/admin/AdminOrders";
@@ -31,6 +33,8 @@ const router = createBrowserRouter([
           { path: "checkout", element: <Checkout /> },
           { path: "orders", element: <Orders /> },
           { path: "orders/:id", element: <OrderTracking /> },
+          { path: "favorites", element: <Favorites /> },
+          { path: "profile", element: <Profile /> },
         ],
       },
     ],

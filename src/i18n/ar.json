@@ -28,17 +28,20 @@
     "backToOrders": "العودة لطلباتي"
   },
   "navbar": {
-    "brand": "شغف وحب",
+    "brand": "FreshBox",
     "menu": "القائمة",
     "cart": "السلة",
     "orders": "الطلبات",
+    "favorites": "المفضلة",
+    "profile": "الملف الشخصي",
     "adminPanel": "لوحة التحكم",
     "logout": "خروج",
     "login": "دخول",
-    "register": "تسجيل"
+    "register": "تسجيل",
+    "searchPlaceholder": "ابحث في القائمة..."
   },
   "footer": {
-    "tagline": "🍕 شغف وحب — نطبخ بحب ونقدم بشغف",
+    "tagline": "🥗 FreshBox — وجبات طازجة، توصيل سريع",
     "rights": "جميع الحقوق محفوظة."
   },
   "languageSwitcher": {
@@ -47,9 +50,19 @@
     "arabic": "العربية"
   },
   "home": {
+    "heroTitle": "نطبخ بشغف، ونقدم بحب",
+    "heroSubtitle": "اكتشف نكهات تحول كل وجبة إلى احتفال. مكونات طازجة، وصفات أصيلة، نوصلها لباب بيتك.",
+    "heroCta": "استعرض القائمة",
+    "featuredTitle": "الأكثر طلباً",
+    "featuredSubtitle": "الأطباق الأكثر حباً من مجتمعنا هذا الأسبوع",
     "discoverMenu": "اكتشف قائمتنا",
     "searchPlaceholder": "ابحث عن وجبتك المفضلة...",
-    "noSearchResults": "لم نجد أي وجبات تطابق بحثك"
+    "noSearchResults": "لم نجد أي وجبات تطابق بحثك",
+    "sortBy": "ترتيب حسب",
+    "sortDefault": "الافتراضي",
+    "sortPriceLow": "السعر: من الأقل للأعلى",
+    "sortPriceHigh": "السعر: من الأعلى للأقل",
+    "sortName": "الاسم أ-ي"
   },
   "auth": {
     "welcomeBack": "مرحباً بك مجدداً",
@@ -84,12 +97,16 @@
     "paymentMethod": "طريقة الدفع",
     "cashOnDelivery": "الدفع عند الاستلام",
     "payWhenReceive": "ادفع عند استلام وجبتك",
+    "savedAddresses": "العناوين المحفوظة",
+    "addNewAddress": "إضافة عنوان جديد",
+    "addressLabel": "تسمية (مثل المنزل، العمل)",
+    "useSelected": "استخدام هذا العنوان",
     "orderPlaced": "تم إرسال طلبك بنجاح!",
     "successMessage": "تم تجهيز طلبك ويتم معالجته الآن.",
-    "viewOrders": "استعراض طلباتك 📦",
+    "viewOrders": "استعراض طلباتي",
     "emptyCart": "عربة التسوق فارغة",
     "emptyMessage": "يرجى إضافة بعض الوجبات الشهية قبل إتمام الطلب.",
-    "browseMenu": "تصفح المنيو 🍕",
+    "browseMenu": "تصفح المنيو",
     "orderSummary": "ملخص الطلب",
     "subtotal": "المجموع الفرعي",
     "shipping": "التوصيل",
@@ -117,13 +134,16 @@
     "loadingCart": "جاري تجهيز سلتك...",
     "clearCart": "مسح السلة",
     "proceedCheckout": "إتمام عملية الشراء",
+    "miniCartTitle": "ملخص السلة",
+    "miniCartEmpty": "سلتك فارغة",
     "removeItemError": "فشل إزالة العنصر",
     "updateQuantityError": "فشل تحديث الكمية",
     "loadCartError": "فشل تحميل العربة",
     "emptyCartError": "فشل إفراغ العربة",
     "orderSummary": "ملخص الطلب",
     "retry": "إعادة المحاولة",
-    "adding": "جاري الإضافة..."
+    "adding": "جاري الإضافة...",
+    "subtotal": "المجموع الفرعي"
   },
   "orders": {
     "myOrders": "طلباتي",
@@ -131,6 +151,11 @@
     "noOrders": "لا توجد طلبات بعد",
     "emptyMessage": "لم تقم بأي طلبات حتى الآن. ما رأيك في تجربة أطباقنا الآن؟",
     "trackOrder": "تتبع الطلب",
+    "reorder": "أعد الطلب",
+    "cancelOrder": "إلغاء الطلب",
+    "cancelConfirm": "هل أنت متأكد من إلغاء هذا الطلب؟",
+    "cancelSuccess": "تم إلغاء الطلب بنجاح",
+    "cancelFailed": "فشل إلغاء الطلب",
     "pending": "قيد الانتظار",
     "confirmed": "تم التأكيد",
     "delivered": "تم التوصيل",
@@ -160,7 +185,10 @@
     "backToOrders": "العودة لقائمة طلباتي",
     "loadingOrder": "جاري تحميل تفاصيل الطلب...",
     "errorLoadingOrder": "خطأ في تحميل الطلب",
-    "invalidOrder": "الطلب غير موجود"
+    "invalidOrder": "الطلب غير موجود",
+    "cancelOrder": "إلغاء الطلب",
+    "etaLabel": "الوصول المتوقع",
+    "etaCalculating": "جاري الحساب..."
   },
   "admin": {
     "dashboardOverview": "لوحة الإحصائيات",
@@ -243,6 +271,33 @@
     "failedUploadImage": "فشل رفع الصورة",
     "failedSaveProduct": "فشل في حفظ المنتج",
     "failedDeleteProduct": "فشل حذف المنتج"
+  },
+  "favorites": {
+    "myFavorites": "المفضلة",
+    "emptyTitle": "لا توجد مفضلات بعد",
+    "emptyMessage": "ابدأ بإضافة الأطباق التي تحبها عن طريق الضغط على رمز القلب بجانب أي منتج.",
+    "browseMenu": "تصفح القائمة",
+    "removeFromFavorites": "إزالة من المفضلة",
+    "addToFavorites": "إضافة إلى المفضلة"
+  },
+  "profile": {
+    "myProfile": "الملف الشخصي",
+    "accountDetails": "بيانات الحساب",
+    "savedAddresses": "العناوين المحفوظة",
+    "recentOrders": "آخر الطلبات",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "role": "الدور",
+    "noSavedAddresses": "لا توجد عناوين محفوظة بعد",
+    "noRecentOrders": "لا توجد طلبات حديثة"
+  },
+  "productDetail": {
+    "addToCart": "أضف إلى السلة",
+    "adding": "جاري الإضافة...",
+    "quantity": "الكمية",
+    "inStock": "متاح",
+    "outOfStock": "غير متاح حالياً",
+    "price": "السعر"
   },
   "validation": {
     "emailRequired": "البريد الإلكتروني مطلوب",

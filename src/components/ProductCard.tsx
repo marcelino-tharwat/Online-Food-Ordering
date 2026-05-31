@@ -8,8 +8,9 @@ import {
   optimisticRemoveItem,
 } from "../redux/slices/cartSlice";
 import type { AppDispatch } from "../redux/store";
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import { ShoppingCart, Check } from "lucide-react";
+import FavoriteButton from "./FavoriteButton";
 
 interface ProductCardProps {
   id: string;
@@ -29,7 +30,8 @@ export default function ProductCard({
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
     if (isAdding) return;
 
     const product = {
@@ -62,23 +64,25 @@ export default function ProductCard({
   };
 
   return (
-    <div className="group bg-surface-card border border-border-light rounded-2xl overflow-hidden hover:border-border-medium hover:shadow-lg hover:shadow-black/20 transition-all duration-300 animate-fade-in flex flex-col">
-      <div className="relative overflow-hidden aspect-[4/3] bg-surface-overlay">
+    <div className="group bg-white border border-border-light rounded-2xl overflow-hidden hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 transition-all duration-300 animate-fade-in flex flex-col">
+      <div className="relative overflow-hidden aspect-[4/3] bg-accent">
         <img
           src={image || "/placeholder.png"}
           alt={name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface-primary/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute top-2 start-2 z-10">
+          <FavoriteButton productId={id} />
+        </div>
       </div>
 
       <div className="p-4 flex flex-col flex-1 gap-3">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-base font-bold text-text-primary leading-snug line-clamp-1 flex-1">
+          <h3 className="text-base font-semibold text-text-primary leading-snug line-clamp-1 flex-1">
             {name}
           </h3>
-          <span className="text-lg font-black font-mono text-brand-orange flex-shrink-0 leading-none mt-0.5">
+          <span className="text-lg font-bold font-mono text-primary flex-shrink-0 leading-none mt-0.5">
             ${price}
           </span>
         </div>
@@ -86,12 +90,12 @@ export default function ProductCard({
         <button
           onClick={handleAddToCart}
           disabled={isAdding}
-          className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+          className={`w-full py-2.5 px-4 rounded-md text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
             justAdded
-              ? "bg-success/20 text-success border border-success/30"
+              ? "bg-success-bg text-success border border-success/30"
               : isAdding
-                ? "bg-white/5 text-text-secondary border border-border-medium cursor-not-allowed"
-                : "bg-white text-surface-primary hover:bg-brand-orange hover:text-white active:scale-[0.98] border border-transparent shadow-sm"
+                ? "bg-accent/50 text-text-secondary border border-border-light cursor-not-allowed"
+                : "bg-primary text-white hover:bg-primary-hover active:scale-[0.98] shadow-sm"
           }`}
         >
           {justAdded ? (

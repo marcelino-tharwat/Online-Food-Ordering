@@ -8,7 +8,6 @@ import {
   Loader2,
   ImagePlus,
   AlertTriangle,
-  X,
   Package,
   Search,
 } from "lucide-react";
@@ -108,7 +107,7 @@ export function ProductModal({
               name: { ...prev.name, en: e.target.value },
             }))
           }
-          className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all text-sm"
+          className="w-full px-4 py-2.5 bg-white border border-border-medium rounded-lg text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all text-sm"
           required
         />
       </div>
@@ -126,7 +125,7 @@ export function ProductModal({
               name: { ...prev.name, ar: e.target.value },
             }))
           }
-          className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all text-sm"
+          className="w-full px-4 py-2.5 bg-white border border-border-medium rounded-lg text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all text-sm"
           required
           dir="rtl"
         />
@@ -147,7 +146,7 @@ export function ProductModal({
               price: parseFloat(e.target.value) || 0,
             }))
           }
-          className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl text-text-primary font-mono font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all text-sm"
+          className="w-full px-4 py-2.5 bg-white border border-border-medium rounded-lg text-text-primary font-mono font-medium focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all text-sm"
           required
         />
       </div>
@@ -157,12 +156,12 @@ export function ProductModal({
           {currentLang === "ar" ? "القسم" : "Category"}
         </label>
         {loadingCategories ? (
-          <div className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl flex items-center text-text-tertiary text-sm gap-2">
-            <Loader2 className="animate-spin w-4 h-4 text-brand-orange" />
+          <div className="w-full px-4 py-2.5 bg-white border border-border-medium rounded-lg flex items-center text-text-tertiary text-sm gap-2">
+            <Loader2 className="animate-spin w-4 h-4 text-primary" />
             <span>{currentLang === "ar" ? "جاري تحميل الأقسام..." : "Loading categories..."}</span>
           </div>
         ) : categories.length === 0 ? (
-          <div className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl text-text-tertiary text-sm">
+          <div className="w-full px-4 py-2.5 bg-white border border-border-medium rounded-lg text-text-tertiary text-sm">
             {currentLang === "ar" ? "لا توجد أقسام متاحة" : "No categories available"}
           </div>
         ) : (
@@ -171,14 +170,14 @@ export function ProductModal({
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, category: e.target.value }))
             }
-            className="w-full px-4 py-2.5 bg-surface-card border border-border-medium rounded-xl text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all text-sm appearance-none"
+            className="w-full px-4 py-2.5 bg-white border border-border-medium rounded-lg text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all text-sm appearance-none"
             required
           >
-            <option value="" className="bg-surface-modal text-text-tertiary">
+            <option value="" className="bg-white text-text-tertiary">
               {currentLang === "ar" ? "اختر القسم" : "Select a category"}
             </option>
             {categories.map((cat) => (
-              <option key={cat._id} value={cat._id} className="bg-surface-modal text-text-primary">
+              <option key={cat._id} value={cat._id} className="bg-white text-text-primary">
                 {currentLang === "ar"
                   ? cat.name?.ar || cat.name?.en
                   : cat.name?.en || cat.name?.ar}
@@ -192,7 +191,7 @@ export function ProductModal({
         <label className="block text-xs font-bold text-text-tertiary mb-1.5 uppercase tracking-wide">
           {currentLang === "ar" ? "صورة المنتج" : "Image"}
         </label>
-        <div className="relative flex items-center justify-center w-full min-h-[100px] bg-surface-card border-2 border-dashed border-border-medium rounded-xl p-4 hover:border-brand-orange/30 hover:bg-brand-orange/5 transition-all cursor-pointer group">
+        <div className="relative flex items-center justify-center w-full min-h-[100px] bg-white border-2 border-dashed border-border-medium rounded-2xl p-4 hover:border-primary/30 hover:bg-primary-lighter transition-all cursor-pointer group">
           <input
             type="file"
             accept="image/*"
@@ -203,7 +202,7 @@ export function ProductModal({
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
           />
           <div className="text-center space-y-1 text-text-tertiary group-hover:text-text-secondary transition-colors flex flex-col items-center">
-            <ImagePlus className="w-6 h-6 mb-1 text-text-tertiary group-hover:text-brand-orange" />
+            <ImagePlus className="w-6 h-6 mb-1 text-text-tertiary group-hover:text-primary" />
             <span className="text-xs font-medium">
               {currentLang === "ar"
                 ? "اضغط لرفع صورة للمنتج"
@@ -214,7 +213,7 @@ export function ProductModal({
 
         {uploading && (
           <div className="mt-2 text-xs text-text-tertiary flex items-center gap-1.5">
-            <Loader2 className="animate-spin w-3.5 h-3.5 text-brand-orange" />
+            <Loader2 className="animate-spin w-3.5 h-3.5 text-primary" />
             <span>{currentLang === "ar" ? "جاري الرفع..." : "Uploading..."}</span>
           </div>
         )}
@@ -241,7 +240,7 @@ export function ProductModal({
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, available: e.target.checked }))
           }
-          className="w-4 h-4 rounded border-border-medium bg-surface-card text-brand-orange accent-brand-orange focus:ring-brand-orange/30"
+          className="w-4 h-4 rounded border-border-medium bg-white text-primary accent-primary focus:ring-primary/30"
         />
         <label
           htmlFor="available"
@@ -372,14 +371,14 @@ function AdminProducts() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-orange flex items-center justify-center shadow-lg shadow-orange-900/30">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
             <Package className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-black font-serif tracking-tight text-text-primary">
+            <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-text-primary">
               {currentLang === "ar" ? "قائمة المنتجات" : "Products Management"}
             </h1>
             <p className="text-xs text-text-tertiary mt-0.5">
@@ -406,26 +405,26 @@ function AdminProducts() {
           placeholder={currentLang === "ar" ? "بحث..." : "Search products..."}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full ps-9 pe-3 py-2 bg-surface-card border border-border-medium rounded-xl text-text-primary text-sm placeholder:text-text-tertiary/60 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all"
+          className="w-full ps-9 pe-3 py-2 bg-white border border-border-medium rounded-lg text-text-primary text-sm placeholder:text-text-tertiary/60 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all"
         />
       </div>
 
       {loading ? (
         <div className="flex justify-center items-center py-24">
-          <Loader2 className="w-8 h-8 text-brand-orange animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="text-center py-16 border border-border-light rounded-2xl bg-surface-card">
+        <div className="text-center py-16 border border-border-light rounded-2xl bg-white">
           <Package className="w-10 h-10 text-text-tertiary mx-auto mb-3" />
           <p className="text-text-secondary text-sm font-medium">
             {currentLang === "ar" ? "لم يتم العثور على أي منتجات" : "No products found"}
           </p>
         </div>
       ) : (
-        <div className="bg-surface-card border border-border-light rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-white border border-border-light rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border-light text-sm">
-              <thead className="bg-surface-overlay/50">
+              <thead className="bg-accent/40">
                 <tr>
                   {["Image", "Name", "Price", "Status", "Actions"].map(
                     (_, i) => (
@@ -453,10 +452,10 @@ function AdminProducts() {
                 {filteredProducts.map((product) => (
                   <tr
                     key={product._id}
-                    className="hover:bg-white/[0.02] transition-colors"
+                    className="hover:bg-accent/20 transition-colors"
                   >
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <div className="w-11 h-11 bg-surface-overlay border border-border-light rounded-xl overflow-hidden flex items-center justify-center">
+                      <div className="w-11 h-11 bg-accent/50 border border-border-light rounded-xl overflow-hidden flex items-center justify-center">
                         {product.image ? (
                           <img
                             src={product.image}
@@ -483,10 +482,10 @@ function AdminProducts() {
                     <td className="px-5 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleToggle(product)}
-                        className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all border ${
+                        className={`px-3 py-1.5 text-[10px] font-bold rounded-md transition-all border ${
                           product.available
-                            ? "bg-success/10 text-success border-success/20 hover:bg-success/15"
-                            : "bg-error/10 text-error border-error/20 hover:bg-error/15"
+                            ? "bg-success-bg text-success border-success/20 hover:bg-success/15"
+                            : "bg-error-bg text-error border-error/20 hover:bg-error/15"
                         }`}
                       >
                         {product.available
@@ -532,7 +531,7 @@ function AdminProducts() {
       >
         {modalLoading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="animate-spin h-8 w-8 text-brand-orange" />
+            <Loader2 className="animate-spin h-8 w-8 text-primary" />
           </div>
         ) : (
           <ProductModal
@@ -552,10 +551,10 @@ function AdminProducts() {
         maxWidth="max-w-sm"
       >
         <div className="text-center">
-          <div className="w-12 h-12 bg-error/10 border border-error/20 text-error rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 bg-error-bg border border-error-border text-error rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="w-5 h-5" />
           </div>
-          <h3 className="text-lg font-serif font-black mb-2 tracking-wide text-text-primary">
+          <h3 className="text-lg font-bold mb-2 tracking-wide text-text-primary">
             {currentLang === "ar" ? "تأكيد الحذف" : "Confirm Delete"}
           </h3>
           <p className="text-xs text-text-secondary mb-6 leading-relaxed">

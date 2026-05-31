@@ -45,7 +45,6 @@ function Login() {
     try {
       const response = await api.post("/auth/login", { email, password });
       const responseData = response.data;
-
       const token = responseData?.token ?? responseData?.data?.token;
       const user = responseData?.user ?? responseData?.data?.user;
 
@@ -71,10 +70,10 @@ function Login() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-surface-mint">
       <div className="w-full max-w-sm animate-fade-in">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-black font-serif tracking-tight mb-2">
+          <h2 className="text-3xl font-extrabold tracking-tight text-text-primary mb-2">
             {t("auth.welcomeBack")}
           </h2>
           <p className="text-text-secondary text-sm">
@@ -82,9 +81,9 @@ function Login() {
           </p>
         </div>
 
-        <div className="bg-surface-card border border-border-light rounded-2xl p-6 md:p-8 shadow-lg">
+        <div className="bg-white border border-border-light rounded-2xl p-6 md:p-8 shadow-sm">
           {apiError && (
-            <div className="mb-5 p-3 bg-error-bg border border-error-border text-error-text rounded-xl text-xs font-medium flex items-center gap-2 animate-shake" role="alert">
+            <div className="mb-5 p-3 bg-error-bg border border-error-border text-error-text rounded-md text-xs font-medium flex items-center gap-2" role="alert">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {apiError}
             </div>
@@ -129,7 +128,7 @@ function Login() {
             {t("auth.dontHaveAccount")}{" "}
             <Link
               to="/register"
-              className="text-brand-orange font-bold hover:text-brand-orange-light transition-colors"
+              className="text-primary font-semibold hover:text-primary-hover transition-colors"
             >
               {t("auth.registerHere")}
             </Link>

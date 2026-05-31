@@ -13,6 +13,7 @@ import {
   type CartItem,
   type LocalizedText,
 } from "../redux/slices/cartSlice";
+import { addAddress, type Address } from "../redux/slices/addressesSlice";
 import type { RootState, AppDispatch } from "../redux/store";
 import {
   Loader2,
@@ -26,9 +27,11 @@ import {
   FileText,
   CheckCircle,
   AlertCircle,
+  Plus,
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
+import SavedAddresses from "../components/SavedAddresses";
 
 type PaymentMethod = "COD";
 
@@ -68,6 +71,8 @@ function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [addressLabel, setAddressLabel] = useState("");
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -133,16 +138,24 @@ function Checkout() {
     }
   };
 
+  const handleAddressSelect = (addr: Address) => {
+    setAddress({
+      fullName: addr.fullName,
+      phone: addr.phone,
+      city: addr.city,
+      street: addr.street,
+      notes: addr.notes,
+    });
+  };
+
   const handlePlaceOrder = async () => {
     if (!validateForm()) return;
     if (cartItems.length === 0) {
       setSubmitError(t("checkout.emptyCart", "Your cart is empty"));
       return;
     }
-
     setSubmitting(true);
     setSubmitError(null);
-
     try {
       const orderData = {
         fullName: address.fullName.trim(),
@@ -152,6 +165,20 @@ function Checkout() {
       await api.post("/orders", orderData);
       await cartService.clearCart();
       dispatch(clearCart());
+
+      if (saveAddress && addressLabel.trim()) {
+        const newAddr: Address = {
+          id: `addr_${Date.now()}`,
+          label: addressLabel.trim(),
+          fullName: address.fullName.trim(),
+          phone: address.phone.trim(),
+          city: address.city.trim(),
+          street: address.street.trim(),
+          notes: address.notes.trim(),
+        };
+        dispatch(addAddress(newAddr));
+      }
+
       setSuccess(true);
     } catch (error) {
       if (error && typeof error === "object" && "response" in error) {
@@ -168,22 +195,18 @@ function Checkout() {
 
   if (success) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center px-4">
+      <div className="min-h-[70vh] flex items-center justify-center px-4 bg-surface-mint">
         <div className="max-w-sm w-full text-center animate-fade-in">
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-success-bg border border-success/20 flex items-center justify-center">
             <CheckCircle className="w-8 h-8 text-success" />
           </div>
-          <h2 className="text-2xl font-black mb-3 font-serif tracking-tight">
+          <h2 className="text-2xl font-bold mb-3 text-text-primary">
             {t("checkout.orderPlaced")}
           </h2>
           <p className="text-text-secondary text-sm mb-8">
             {t("checkout.successMessage")}
           </p>
-          <Button
-            onClick={() => navigate("/orders")}
-            fullWidth
-            size="lg"
-          >
+          <Button onClick={() => navigate("/orders")} fullWidth size="lg">
             {t("checkout.viewOrders")}
           </Button>
         </div>
@@ -195,8 +218,8 @@ function Checkout() {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-brand-orange animate-spin" />
-          <p className="text-text-secondary text-sm font-medium animate-pulse-soft">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-text-secondary text-sm font-medium">
             {t("checkout.loadingCheckout", "Loading checkout...")}
           </p>
         </div>
@@ -206,22 +229,18 @@ function Checkout() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center px-4">
+      <div className="min-h-[70vh] flex items-center justify-center px-4 bg-surface-mint">
         <div className="max-w-sm w-full text-center animate-fade-in">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-brand-orange/10 border border-brand-orange/20 flex items-center justify-center">
-            <ShoppingBag className="w-8 h-8 text-brand-orange" />
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary-light flex items-center justify-center">
+            <ShoppingBag className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-2xl font-black mb-3 font-serif tracking-tight">
+          <h2 className="text-2xl font-bold mb-3 text-text-primary">
             {t("checkout.emptyCart")}
           </h2>
           <p className="text-text-secondary text-sm mb-8">
             {t("checkout.emptyMessage")}
           </p>
-          <Button
-            onClick={() => navigate("/menu")}
-            fullWidth
-            size="lg"
-          >
+          <Button onClick={() => navigate("/menu")} fullWidth size="lg">
             {t("checkout.browseMenu")}
           </Button>
         </div>
@@ -230,14 +249,14 @@ function Checkout() {
   }
 
   return (
-    <div className="py-8 md:py-12 px-4 md:px-8">
+    <div className="py-8 md:py-12 px-4 md:px-8 bg-surface-mint min-h-screen">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-black font-serif tracking-tight mb-8">
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-text-primary mb-8">
           {t("checkout.checkout")}
         </h1>
 
         {submitError && (
-          <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2" role="alert">
+          <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-md mb-6 text-sm flex items-center gap-2" role="alert">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             {submitError}
           </div>
@@ -245,11 +264,13 @@ function Checkout() {
 
         <div className="grid md:grid-cols-5 gap-6 items-start">
           <div className="md:col-span-3 space-y-6">
-            <div className="bg-surface-card border border-border-light rounded-2xl p-6 shadow-lg">
+            <div className="bg-white border border-border-light rounded-2xl p-6 shadow-sm">
               <h2 className="text-base font-bold mb-5 flex items-center gap-2 text-text-primary">
-                <MapPin className="w-4 h-4 text-brand-orange" />
+                <MapPin className="w-4 h-4 text-primary" />
                 {t("checkout.deliveryAddress")}
               </h2>
+
+              <SavedAddresses onSelect={handleAddressSelect} />
 
               <div className="space-y-4">
                 <Input
@@ -295,35 +316,58 @@ function Checkout() {
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm font-semibold tracking-wide text-text-secondary">
+                  <label className="block mb-2 text-sm font-semibold text-text-secondary">
                     {t("common.notesOptional")}
                   </label>
                   <div className="relative">
-                    <FileText className="absolute start-3.5 top-3.5 w-4 h-4 text-text-tertiary" />
+                    <FileText className="absolute start-3 top-3 w-4 h-4 text-text-tertiary" />
                     <textarea
                       name="notes"
                       value={address.notes}
                       onChange={handleInputChange}
                       rows={3}
                       placeholder={t("checkout.specialInstructions")}
-                      className="w-full ps-10 pe-4 py-3 bg-surface-card text-text-primary border border-border-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all placeholder:text-text-tertiary/60 text-sm font-medium resize-none"
+                      className="w-full ps-10 pe-3.5 py-2.5 bg-white text-text-primary border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all placeholder:text-text-tertiary/70 text-sm resize-none"
                     />
                   </div>
                 </div>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={saveAddress}
+                    onChange={(e) => setSaveAddress(e.target.checked)}
+                    className="w-4 h-4 rounded border-border-medium text-primary accent-primary focus:ring-primary/30"
+                  />
+                  <span className="text-xs font-semibold text-text-secondary">
+                    {t("checkout.saveAddress", "Save this address for next time")}
+                  </span>
+                </label>
+
+                {saveAddress && (
+                  <Input
+                    label={t("checkout.addressLabel")}
+                    placeholder={currentLang === "ar" ? "المنزل، العمل..." : "Home, Work..."}
+                    value={addressLabel}
+                    onChange={(e) => setAddressLabel(e.target.value)}
+                    name="addressLabel"
+                    icon={<Plus className="w-4 h-4" />}
+                  />
+                )}
               </div>
             </div>
 
-            <div className="bg-surface-card border border-border-light rounded-2xl p-6 shadow-lg">
+            <div className="bg-white border border-border-light rounded-2xl p-6 shadow-sm">
               <h2 className="text-base font-bold mb-5 flex items-center gap-2 text-text-primary">
-                <CreditCard className="w-4 h-4 text-brand-orange" />
+                <CreditCard className="w-4 h-4 text-primary" />
                 {t("checkout.paymentMethod")}
               </h2>
 
               <label
                 className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all border ${
                   paymentMethod === "COD"
-                    ? "bg-brand-orange/5 border-brand-orange/30"
-                    : "bg-white/[0.02] border-border-light hover:border-border-medium"
+                    ? "bg-primary-light/50 border-primary/30"
+                    : "bg-white border-border-light hover:border-primary/20"
                 }`}
               >
                 <input
@@ -332,13 +376,13 @@ function Checkout() {
                   value="COD"
                   checked={paymentMethod === "COD"}
                   onChange={() => setPaymentMethod("COD")}
-                  className="w-4 h-4 accent-brand-orange"
+                  className="w-4 h-4 accent-primary"
                 />
-                <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center">
-                  <Banknote className="w-5 h-5 text-brand-orange" />
+                <div className="w-10 h-10 rounded-md bg-primary-light flex items-center justify-center">
+                  <Banknote className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <span className="font-bold block text-sm text-text-primary">
+                  <span className="font-semibold block text-sm text-text-primary">
                     {t("checkout.cashOnDelivery")}
                   </span>
                   <span className="text-xs text-text-tertiary block mt-0.5">
@@ -350,13 +394,13 @@ function Checkout() {
           </div>
 
           <div className="md:col-span-2 md:sticky md:top-24">
-            <div className="bg-surface-card border border-border-light rounded-2xl p-6 shadow-lg">
+            <div className="bg-white border border-border-light rounded-2xl p-6 shadow-sm">
               <h2 className="text-base font-bold mb-5 flex items-center gap-2 text-text-primary">
-                <ShoppingBag className="w-4 h-4 text-brand-orange" />
+                <ShoppingBag className="w-4 h-4 text-primary" />
                 {t("checkout.orderSummary")}
               </h2>
 
-              <div className="divide-y divide-border-light mb-5 max-h-[280px] overflow-y-auto scrollbar-thin">
+              <div className="divide-y divide-border-light mb-5 max-h-[280px] overflow-y-auto">
                 {cartItems.map((item: CartItem) => (
                   <div
                     key={item.product._id}
@@ -365,16 +409,16 @@ function Checkout() {
                     <img
                       src={item.product.image || "/placeholder.png"}
                       alt={getLocalizedText(item.product.name)}
-                      className="w-12 h-12 object-cover rounded-xl bg-surface-overlay border border-border-light flex-shrink-0"
+                      className="w-12 h-12 object-cover rounded-xl bg-accent border border-border-light flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-sm text-text-primary truncate">
+                      <h3 className="font-semibold text-sm text-text-primary truncate">
                         {getLocalizedText(item.product.name)}
                       </h3>
                       <p className="text-xs text-text-tertiary mt-0.5">
                         {t("orderTracking.qty")} {item.quantity}
                       </p>
-                      <p className="text-sm font-black font-mono mt-1 text-text-primary">
+                      <p className="text-sm font-bold font-mono mt-1 text-text-primary">
                         ${(item.product.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
@@ -385,19 +429,19 @@ function Checkout() {
               <div className="border-t border-border-light pt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between items-center">
                   <span className="text-text-secondary">{t("checkout.subtotal")}</span>
-                  <span className="font-bold font-mono text-text-primary">
+                  <span className="font-semibold font-mono text-text-primary">
                     ${computedTotal.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-text-secondary">{t("checkout.shipping")}</span>
-                  <span className="font-bold text-success">{t("checkout.free")}</span>
+                  <span className="font-semibold text-success">{t("checkout.free")}</span>
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-border-light">
-                  <span className="text-base font-bold font-serif text-text-primary">
+                  <span className="text-base font-bold text-text-primary">
                     {t("checkout.grandTotal")}
                   </span>
-                  <span className="text-xl md:text-2xl font-black font-mono text-brand-orange">
+                  <span className="text-xl md:text-2xl font-bold font-mono text-primary">
                     ${computedTotal.toFixed(2)}
                   </span>
                 </div>

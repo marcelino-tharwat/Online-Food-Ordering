@@ -6,31 +6,27 @@ import { Button } from "../../components/ui/Button";
 
 const statusConfig: Record<
   OrderStatus,
-  { label: string; arLabel: string; color: string; dot: string }
+  { label: string; arLabel: string; color: string }
 > = {
   pending: {
     label: "Pending",
     arLabel: "قيد الانتظار",
     color: "bg-warning/10 text-warning border border-warning/20",
-    dot: "bg-warning",
   },
   confirmed: {
     label: "Confirmed",
     arLabel: "تم التأكيد",
     color: "bg-info/10 text-info border border-info/20",
-    dot: "bg-info",
   },
   delivered: {
     label: "Delivered",
     arLabel: "تم التوصيل",
-    color: "bg-success/10 text-success border border-success/20",
-    dot: "bg-success",
+    color: "bg-success-bg text-success border border-success/20",
   },
   cancelled: {
     label: "Cancelled",
     arLabel: "ملغي",
-    color: "bg-error/10 text-error border border-error/20",
-    dot: "bg-error",
+    color: "bg-error-bg text-error border border-error/20",
   },
 };
 
@@ -120,13 +116,13 @@ function AdminOrders() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-orange flex items-center justify-center shadow-lg shadow-orange-900/30">
+        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
           <ShoppingBag className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-xl md:text-2xl font-black font-serif tracking-tight text-text-primary">
+          <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-text-primary">
             {currentLang === "ar" ? "إدارة الطلبات" : "Orders Management"}
           </h1>
           <p className="text-xs text-text-tertiary mt-0.5">
@@ -145,7 +141,7 @@ function AdminOrders() {
             placeholder={currentLang === "ar" ? "بحث..." : "Search orders..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full ps-9 pe-3 py-2 bg-surface-card border border-border-medium rounded-xl text-text-primary text-sm placeholder:text-text-tertiary/60 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange/50 transition-all"
+            className="w-full ps-9 pe-3 py-2 bg-white border border-border-medium rounded-lg text-text-primary text-sm placeholder:text-text-tertiary/60 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/50 transition-all"
           />
         </div>
 
@@ -154,10 +150,10 @@ function AdminOrders() {
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
+              className={`px-3.5 py-1.5 rounded-md text-[10px] font-bold transition-all border ${
                 statusFilter === status
-                  ? "bg-brand-orange text-white border-brand-orange shadow-sm"
-                  : "bg-white/5 text-text-secondary border-border-light hover:text-text-primary hover:bg-white/10 hover:border-border-medium"
+                  ? "bg-primary text-white border-primary shadow-sm"
+                  : "bg-white text-text-secondary border-border-light hover:text-primary hover:border-primary/30"
               }`}
             >
               {status === "all"
@@ -172,18 +168,18 @@ function AdminOrders() {
 
       {loading && (
         <div className="flex justify-center items-center py-24">
-          <Loader2 className="w-8 h-8 text-brand-orange animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       )}
 
       {error && (
-        <div className="bg-error/10 border border-error/20 text-error p-4 rounded-xl text-sm font-medium" role="alert">
+        <div className="bg-error-bg border border-error-border text-error p-4 rounded-md text-sm font-medium" role="alert">
           {error}
         </div>
       )}
 
       {!loading && !error && searchedOrders.length === 0 && (
-        <div className="text-center py-16 border border-border-light rounded-2xl bg-surface-card">
+        <div className="text-center py-16 border border-border-light rounded-2xl bg-white">
           <ShoppingBag className="w-10 h-10 text-text-tertiary mx-auto mb-3" />
           <p className="text-text-secondary text-sm font-medium">
             {currentLang === "ar"
@@ -194,10 +190,10 @@ function AdminOrders() {
       )}
 
       {!loading && !error && searchedOrders.length > 0 && (
-        <div className="bg-surface-card border border-border-light rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-white border border-border-light rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border-light text-sm">
-              <thead className="bg-surface-overlay/50">
+              <thead className="bg-accent/40">
                 <tr>
                   {["Order ID", "Customer", "Total", "Payment", "Status", "Date"].map(
                     (_, i) => (
@@ -225,7 +221,7 @@ function AdminOrders() {
                 {searchedOrders.map((order) => (
                   <tr
                     key={order._id}
-                    className="hover:bg-white/[0.02] transition-colors"
+                    className="hover:bg-accent/20 transition-colors"
                   >
                     <td className="px-5 py-4 whitespace-nowrap font-mono font-bold text-text-primary text-xs">
                       #{order._id.slice(-6).toUpperCase()}
@@ -248,13 +244,13 @@ function AdminOrders() {
                           onChange={(e) =>
                             handleStatusChange(order._id, e.target.value as OrderStatus)
                           }
-                          className={`px-3 py-1.5 text-[10px] font-bold rounded-lg cursor-pointer appearance-none focus:outline-none transition-all ${statusConfig[order.status].color}`}
+                          className={`px-3 py-1.5 text-[10px] font-bold rounded-md cursor-pointer appearance-none focus:outline-none transition-all ${statusConfig[order.status].color}`}
                         >
                           {statusOptions.map((status) => (
                             <option
                               key={status}
                               value={status}
-                              className="bg-surface-modal text-text-primary"
+                              className="bg-white text-text-primary"
                             >
                               {currentLang === "ar"
                                 ? statusConfig[status].arLabel

@@ -83,10 +83,10 @@ function Register() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-surface-mint">
       <div className="w-full max-w-sm animate-fade-in">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-black font-serif tracking-tight mb-2">
+          <h2 className="text-3xl font-extrabold tracking-tight text-text-primary mb-2">
             {t("auth.createAccount")}
           </h2>
           <p className="text-text-secondary text-sm">
@@ -94,15 +94,15 @@ function Register() {
           </p>
         </div>
 
-        <div className="bg-surface-card border border-border-light rounded-2xl p-6 md:p-8 shadow-lg">
+        <div className="bg-white border border-border-light rounded-2xl p-6 md:p-8 shadow-sm">
           {apiError && (
-            <div className="mb-5 p-3 bg-error-bg border border-error-border text-error-text rounded-xl text-xs font-medium flex items-center gap-2" role="alert">
+            <div className="mb-5 p-3 bg-error-bg border border-error-border text-error-text rounded-md text-xs font-medium flex items-center gap-2" role="alert">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {apiError}
             </div>
           )}
           {successMessage && (
-            <div className="mb-5 p-3 bg-success-bg border border-success/20 text-success-text rounded-xl text-xs font-medium flex items-center gap-2">
+            <div className="mb-5 p-3 bg-success-bg border border-success/20 text-success-text rounded-md text-xs font-medium flex items-center gap-2">
               <CheckCircle className="w-4 h-4 flex-shrink-0" />
               {successMessage}
             </div>
@@ -169,7 +169,7 @@ function Register() {
             {t("auth.alreadyHaveAccount")}{" "}
             <Link
               to="/login"
-              className="text-brand-orange font-bold hover:text-brand-orange-light transition-colors"
+              className="text-primary font-semibold hover:text-primary-hover transition-colors"
             >
               {t("auth.loginHere")}
             </Link>

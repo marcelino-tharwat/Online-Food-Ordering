@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { setAppLanguage } from "../i18n";
-import { Languages } from "lucide-react";
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
@@ -13,14 +12,14 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <div className="flex items-center border border-border-light rounded-xl bg-white/5 p-0.5">
+    <div className="flex items-center border border-border-light rounded-md bg-accent/50 p-0.5">
       <button
         type="button"
         onClick={() => handleChange("en")}
-        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+        className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
           currentLang === "en"
-            ? "bg-brand-orange text-white shadow-sm"
-            : "text-text-secondary hover:text-text-primary"
+            ? "bg-primary text-white shadow-sm"
+            : "text-text-secondary hover:text-primary"
         }`}
       >
         EN
@@ -28,10 +27,10 @@ export default function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => handleChange("ar")}
-        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+        className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
           currentLang === "ar"
-            ? "bg-brand-orange text-white shadow-sm"
-            : "text-text-secondary hover:text-text-primary"
+            ? "bg-primary text-white shadow-sm"
+            : "text-text-secondary hover:text-primary"
         }`}
       >
         AR

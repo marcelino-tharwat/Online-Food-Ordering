@@ -14,20 +14,20 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-orange text-white shadow-md shadow-orange-900/30 hover:shadow-lg hover:shadow-orange-900/40 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:active:scale-100",
+    "bg-primary text-white shadow-sm hover:bg-primary-hover active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100",
   outline:
-    "border border-border-medium text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-white/5 active:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed",
+    "border border-border-medium text-text-secondary hover:text-primary hover:border-primary hover:bg-primary-light/30 active:bg-primary-light/50 disabled:opacity-50 disabled:cursor-not-allowed",
   ghost:
-    "text-text-secondary hover:text-text-primary hover:bg-white/5 active:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed",
-  link: "text-brand-orange hover:text-brand-orange-light underline-offset-2 hover:underline disabled:opacity-40 p-0 h-auto",
+    "text-text-secondary hover:text-primary hover:bg-primary-light/30 active:bg-primary-light/50 disabled:opacity-50 disabled:cursor-not-allowed",
+  link: "text-primary hover:text-primary-hover underline-offset-2 hover:underline disabled:opacity-50 p-0 h-auto",
   badge:
-    "bg-white/5 text-text-secondary border border-border-light hover:bg-white/10 hover:text-text-primary disabled:opacity-40",
+    "bg-primary-light/50 text-text-secondary border border-primary-light hover:bg-primary-light hover:text-primary disabled:opacity-50",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "px-3.5 py-2 text-xs rounded-lg gap-1.5",
-  md: "px-5 py-2.5 text-sm rounded-xl gap-2",
-  lg: "px-7 py-3.5 text-base rounded-xl gap-2.5",
+  sm: "px-3 py-1.5 text-xs rounded-md gap-1.5",
+  md: "px-5 py-2.5 text-sm rounded-md gap-2",
+  lg: "px-7 py-3 text-base rounded-md gap-2.5",
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -49,7 +49,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`inline-flex items-center justify-center font-bold tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange/50 ${variantStyles[variant]} ${sizeStyles[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+        className={`inline-flex items-center justify-center font-semibold tracking-normal transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${variantStyles[variant]} ${sizeStyles[size]} ${fullWidth ? "w-full" : ""} ${className}`}
         {...props}
       >
         {loading ? (

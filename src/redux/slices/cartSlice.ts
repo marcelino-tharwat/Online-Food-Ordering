@@ -53,18 +53,18 @@ const cartSlice = createSlice({
     },
     optimisticAddItem: (
       state,
-      action: PayloadAction<{ productId: string; product: Product }>,
+      action: PayloadAction<{ productId: string; product: Product; quantity?: number }>,
     ) => {
-      const { productId, product } = action.payload;
+      const { productId, product, quantity = 1 } = action.payload;
       const existingItem = state.cartItems.find(
         (item) => item.product._id === productId,
       );
       if (existingItem) {
-        existingItem.quantity += 1;
+        existingItem.quantity += quantity;
       } else {
-        state.cartItems.push({ product, quantity: 1 });
+        state.cartItems.push({ product, quantity });
       }
-      state.total += product.price;
+      state.total += product.price * quantity;
     },
     optimisticRemoveItem: (state, action: PayloadAction<string>) => {
       const productId = action.payload;
